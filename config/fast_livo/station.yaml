@@ -1,0 +1,57 @@
+%YAML:1.0
+
+base_config: "../base.yaml"
+scene_config: "fast_livo.yaml"
+
+sdf_iter_step: 5000
+gs_iter_step: 30000
+
+leaf_sizes: 0.2
+fill_level: 1
+bce_sigma: 1.0 # if get floaters, increase this value
+
+camera:
+   model: 0 # 0: pinhole; 1: equidistant
+   width: 640
+   height: 512
+
+   fx: 646.78472
+   fy: 646.65775
+   cx: 313.456795
+   cy: 261.399612
+
+   d0: -0.076160
+   d1: 0.123001
+   d2: -0.00113
+   d3: 0.000251
+   d4: 0.0
+
+extrinsic:
+   # lidar to camera
+   T_C_L: !!opencv-matrix
+      rows: 4
+      cols: 4
+      dt: d
+      data: [ 0.00610193,-0.999863,-0.0154172, 0.0194384,
+              -0.00615449,0.0153796,-0.999863, 0.104689,
+              0.999962,0.00619598,-0.0060598, -0.0251952,
+              0.0, 0.0, 0.0, 1.0 ]
+
+   # lidar to base(imu)
+   T_B_L: !!opencv-matrix
+      rows: 4
+      cols: 4
+      dt: d
+      data: [ 1.0, 0.0, 0.0, 0.04165, 
+              0.0, 1.0, 0.0, 0.02326,
+              0.0, 0.0, 1.0, -0.0284,
+              0.0, 0.0, 0.0, 1.0 ]
+
+map:
+   map_origin: !!opencv-matrix
+      rows: 1
+      cols: 3
+      dt: d
+      data: [ 0, -10, 20 ]
+   
+   map_size: 60

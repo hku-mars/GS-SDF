@@ -1,0 +1,92 @@
+%YAML:1.0
+
+
+base_config: "../base.yaml"
+
+sdf_iter_step: 10000
+sdf_end_step: 150000
+
+preload: 0 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
+
+sh_degree: 3
+bck_color: 1 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
+
+prefilter: 0 # 0: disable; PSNR(SSIM) threshold; prefilter image according to sequential ssim: https://blog.csdn.net/weixin_43135178/article/details/118497369
+max_time_diff_camera_and_pose: 0.01
+max_time_diff_lidar_and_pose: 0.01
+
+# dataset_type
+#   Replica = 0,
+#   R3live = 1,
+#   NeuralRGBD = 2,
+#   KITTI = 3,
+#   FastLivo = 4,
+#   Oxford Spires = 5,
+dataset_type: 5
+
+frame_rate: 10
+min_range: 0.01
+max_range: 100
+ds_pt_num: 10000 # downsampled point number
+max_pt_num: 5000000
+
+# scene config
+leaf_sizes: 0.4
+fill_level: 1
+bce_sigma: 1e-1 # if get floaters, increase this value
+
+outlier_remove: 0 # unnecessary for static scenes
+outlier_dist: 0.05
+outlier_removal_interval: 4000
+
+# visualization
+vis_resolution: 0.1 # better no more than leaf_sizes or will miss faces
+export_resolution: 0.05
+fps: 10
+
+camera:
+   model: 1 # 0: pinhole; 1: equidistant
+   width: 1440
+   height: 1080
+
+   fx: 698.3946772032825
+   fy: 698.4629665854908
+   cx: 718.431814292891
+   cy: 559.7771701003702
+
+   d0: -0.04707469981321094
+   d1: 0.011515146787673071
+   d2: -0.008908394423298474
+   d3: 0.0018561099343051583
+   d4: 0.0
+
+extrinsic:
+   # lidar to camera
+   T_C_L: !!opencv-matrix
+      rows: 4
+      cols: 4
+      dt: d
+      data: [ 0.007194409453692541, 0.9999715416500337, 0.002270762573978069, 0.003242860366163889,
+              0.004589905134308125, 0.0022377749953642057, -0.9999869624819755, -0.07368532755947366,
+              -0.999963585958744, 0.007204738241246789, -0.004573675043599734, -0.05485800045216396,
+              0.0, 0.0, 0.0, 1.0 ]
+
+   # lidar to base(imu)
+   T_B_L: !!opencv-matrix
+      rows: 4
+      cols: 4
+      dt: d
+      data: [ -1.0,  0.0, 0.0, 0.0, 
+               0.0, -1.0, 0.0, 0.0, 
+               0.0,  0.0, 1.0, 0.124,
+               0.0,  0.0, 0.0, 1.0 ]
+
+map:
+   map_origin: !!opencv-matrix
+      rows: 1
+      cols: 3
+      dt: d
+      data: [ 34, 318, 20 ]
+   
+   map_size: 300

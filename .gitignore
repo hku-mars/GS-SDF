@@ -1,0 +1,12 @@
+**/build/**
+**/.vscode/**
+**/__pycache__/**
+**/output/**
+**/data/**
+data
+*.pyc
+*.so
+
+**/*.egg-info/**
+**/_results/**
+output

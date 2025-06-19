@@ -1,0 +1,48 @@
+%YAML:1.0
+# rosrun neural_mapping neural_mapping_node src/RIM2/neural_mapping/config/neural_rgbd/neural_rgbd.yaml src/RIM2/data/neural_rgbd_data/kitchen_kitti_format
+
+base_config: "../base.yaml"
+
+sdf_iter_step: 5000
+gs_iter_step: 30000
+
+preload: 0 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+llff: 0 # 0: disable; 1: enable; every 8 frame will be used for evaluation
+cull_mesh: 1
+
+# dataset_type
+#   Replica = 0,
+#   R3live = 1,
+#   NeuralRGBD = 2,
+#   KITTI = 3,
+#   FastLivo = 4,
+dataset_type: 0
+
+sh_degree: 0
+bck_color: 0 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
+
+map:
+   map_origin: !!opencv-matrix
+      rows: 1
+      cols: 3
+      dt: d
+      data: [ 0, 0, 0 ]
+   map_size: 14
+
+min_range: 0.01
+max_range: 100
+ds_pt_num: 10000 # downsampled point number
+max_pt_num: -1
+
+leaf_sizes: 0.05
+fill_level: 1
+bce_sigma: 1e-2 # if get floaters, increase this value
+
+outlier_removal_interval: 4000
+outlier_remove: 0 # unnecessary for static scenes
+outlier_dist: 0.05
+
+# visualization
+vis_resolution: 0.04 # better no more than leaf_sizes or will miss faces
+export_resolution: 0.01
+fps: 30

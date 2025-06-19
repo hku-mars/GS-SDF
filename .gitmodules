@@ -1,0 +1,15 @@
+[submodule "include/utils/ply_utils"]
+	path = include/utils/ply_utils
+	url = https://github.com/jianhengLiu/ply_utils.git
+[submodule "submodules/llog"]
+	path = submodules/llog
+	url = https://github.com/jianhengLiu/llog.git
+[submodule "submodules/kaolin_wisp_cpp"]
+	path = submodules/kaolin_wisp_cpp
+	url = https://github.com/jianhengLiu/kaolin_wisp_cpp.git
+[submodule "submodules/tcnn_binding"]
+	path = submodules/tcnn_binding
+	url = https://github.com/jianhengLiu/tcnn_binding.git
+[submodule "submodules/gsplat_cpp"]
+	path = submodules/gsplat_cpp
+	url = https://github.com/jianhengLiu/gsplat_cpp.git

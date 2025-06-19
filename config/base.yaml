@@ -1,0 +1,78 @@
+%YAML:1.0
+
+debug: 0 # 0: disable; 1: enable
+
+device_param: 1 # 0: cpu; 1: gpu
+
+# tcnn encoder params
+n_levels: 16
+n_features_per_level: 2
+log2_hashmap_size: 19
+
+decoder_implementation: 0 # 0: torch, 1: tiny-cuda-nn, tcnn decoder might produce nan:https://github.com/NVlabs/tiny-cuda-nn/issues/219
+numerical_grad: 0 # 0: not supported so far, anaytical grad, only support for torch decoder; 1: numerical grad require more VRAM
+
+# decoder params
+hidden_dim: 64
+geo_feat_dim: 14 # geo_feat_dim + k_strc_dim <= 16 / 8 / 4 / 2 or tcnn decoder will become cutlass and crash
+geo_num_layer: 3
+
+trunc_sdf: 1
+surface_sample_num: 3
+free_sample_num: 3
+batch_pt_num: 16384 # color render pt batch size
+
+lr: 5e-3
+lr_end: 1e-4
+
+# SDF params
+m2mapping: 1 # 0: disable; 1: enable; 2: preload
+sdf_weight: 1.0
+eikonal_weight: 1e-1 # it will greatly affect structure
+curvate_weight: 0.0 #5e-4 # should be the same loss level to eikonal loss
+align_weight: 0.1 # adjust smoothness (higher smoother)
+
+edge_gs: 1 # marching cube init. work for general cases; disable when initializing too many gs to OOM
+
+# 2DGS params
+rgb_weight: 0.8
+dssim_weight: 0.2
+geo_init: 1
+color_init: 1 # 0: disable; 1: enable, init color from one-time training
+sky_init: 1
+near: 0.05
+far: 300
+depth_type: 0 # 0: mean depth (unbounded scene); 1: median depth (bounded scene) 
+render_normal_weight: 0.01 # if you got not algined depth and color, please turn on render regularization
+isotropic_weight: 0.05 # isotropic regularization, only for 2DGS
+gs_sdf_weight: 5e-3 # equal to 3d sdf normal; need to space to blending layer element, so not too large
+detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process
+refine_gs_struct_start_iter: 0 #7000 #2000 #7000
+visible_thr: 1e-1 # raise to improve efficiency
+
+# visualization
+vis_frame_step: 10
+
+export_interval: 999 # every export_interval frames, the mesh will be exported
+export_colmap_format: 0 # 0: disable; 1: for 3dgs (txt); 2: for nerfstudio colmap; 3: for 3dgs (bin)
+export_train_pcl: 0 # 0: disable; 1: enable
+export_depth: 1
+export_mesh: 1
+test_idx: 3 # export test img id
+vis_attribute: 1 # 0: disable to save storage; 1: normal;
+
+# strategy config
+prune_opa: 0.05 #0.1 # 0.1 // 0.005 for higher quality from 3DGS
+grow_grad2d: 0.0002 #0.005 # 0.0008 # 0.0002
+grow_scale3d: 0.01
+grow_scale2d: 0.05
+prune_scale3d: 0.1
+prune_scale2d: 0.02
+refine_scale2d_stop_iter: 0 #4000 #splatfato behavior
+refine_start_iter: 500
+refine_every: 100
+reset_alpha_every: 30
+pause_refine: 0 # 0: disable; 1: enable, pause the refine process before training through all data. It reduces memory usage
+
+use_absgrad: 0 # Which typically leads to better results but requires to set the `grow_grad2d` to a higher value, e.g., 0.0008. Also, the :func:`rasterization` function should be called with `absgrad=True` as well so that the absolute gradients are computed. Not suggest for 2dgs
+sh_degree_interval: 1000
