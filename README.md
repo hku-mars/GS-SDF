@@ -186,7 +186,6 @@ Input `h` + `Enter` to see the help message.
   sudo apt install ros-noetic-mesh-msgs ros-noetic-rviz-animated-view-controller ros-noetic-hdf5-map-io
   catkin_make -DENABLE_ROS=ON
   ```
-  Click the `FPS Motion` button to enable FPS control, and you can use the `W`, `A`, `S`, `D` keys to move around the map. Drag the view to activate and control the view with the mouse.
 - Run the following command to visualize the map in real-time:
 
   ```bash
@@ -194,7 +193,7 @@ Input `h` + `Enter` to see the help message.
   roslaunch neural_mapping rviz.launch
   ```
 
-  Drag the view to activate and control the view with the mouse.
+  Click the `FPS Motion` button to enable FPS control, and you can use the `W`, `A`, `S`, `D` keys to move around the map. Drag the view to activate and control the view with the mouse.
 - For post-training visualization, you can use the following command:
 
   ```bash
