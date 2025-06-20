@@ -874,13 +874,6 @@ void NeuralSLAM::batch_train() {
   }
 
   p_train->toc_sum();
-
-  // save current cpu and gpu memory usage to file, it extremely slow
-  static ofstream mem_file(k_output_path / "mem_usage.txt");
-  mem_file << "frame_num\tcpu_mem_usage\tgpu_mem_usage\ttiming\n";
-  mem_file << utils::get_cpu_mem_usage() << "\t" << utils::get_gpu_mem_usage()
-           << "\t" << p_train->this_time() << '\n';
-
   llog::PrintLog();
 
   end();
@@ -938,7 +931,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   int image_type;
   std::string image_type_name;
   std::filesystem::path output_dir, gt_color_path, render_color_path,
-      gt_depth_path, render_depth_path, acc_path;
+      gt_depth_path, render_depth_path;
 
   if (!eval) {
     image_type = dataparser::DataType::RawColor;
@@ -958,12 +951,10 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
     render_color_path = color_path / "renders";
     gt_depth_path = depth_path / "gt";
     render_depth_path = depth_path / "renders";
-    acc_path = output_dir / "acc";
 
     // Create all directories at once instead of in create_dir function
     std::vector<std::filesystem::path> paths = {
-        gt_color_path, render_color_path, gt_depth_path, render_depth_path,
-        acc_path};
+        gt_color_path, render_color_path, gt_depth_path, render_depth_path};
     for (const auto &path : paths) {
       std::filesystem::create_directories(path);
     }
@@ -1282,12 +1273,12 @@ float NeuralSLAM::export_test_image(bool is_eval, int idx,
 // https://pytorch.org/tutorials/advanced/cpp_frontend.html#checkpointing-and-recovering-the-training-state
 void NeuralSLAM::export_checkpoint() {
   if (!k_output_path.empty()) {
-    auto save_path = k_output_path / ("model/local_map_checkpoint.pt");
+    auto save_path = k_model_path / "local_map_checkpoint.pt";
     torch::save(local_map_ptr, save_path);
     write_pt_params();
 
     if (neural_gs_ptr) {
-      auto gs_ply_save_path = k_output_path / ("model/gs.ply");
+      auto gs_ply_save_path = k_model_path / "gs.ply";
       neural_gs_ptr->export_gs_to_ply(gs_ply_save_path);
     }
   }
