@@ -780,7 +780,7 @@ bool NeuralSLAM::build_occ_map() {
   // Convert normalized points to world coordinates
   auto world_points = local_map_ptr->m1p1_pts_to_xyz(normalized_points);
   // Export points to PLY file
-  ply_utils::export_to_ply(k_output_path / "model/as_occ_prior.ply",
+  ply_utils::export_to_ply(k_model_path / "as_occ_prior.ply",
                            world_points.cpu());
 
   timer_cal_prior->toc_sum();
@@ -1318,7 +1318,7 @@ void NeuralSLAM::load_checkpoint(
     }
   }
 
-  auto as_prior_ply_file = _checkpoint_path / "model/as_occ_prior.ply";
+  auto as_prior_ply_file = _checkpoint_path / "as_occ_prior.ply";
   std::map<std::string, torch::Tensor> map_ply_tensor;
   if (ply_utils::read_ply_file_to_map_tensor(as_prior_ply_file, map_ply_tensor,
                                              torch::Device(torch::kCUDA))) {
