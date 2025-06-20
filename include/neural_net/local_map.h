@@ -44,12 +44,6 @@ struct LocalMap : SubMap {
                                           bool _heissian = false,
                                           bool _numerical_grad = true);
 
-  std::vector<torch::Tensor> marching_cubes(ros::Publisher &mesh_pub,
-                                            ros::Publisher &mesh_color_pub,
-                                            std_msgs::Header &header,
-                                            float _res, bool _save,
-                                            const std::string &uuid);
-
   void meshing_(float _res, bool _save);
 
   DepthSamples sample(const DepthSamples &_samples, int voxel_sample_num = 1,
