@@ -143,8 +143,7 @@ void read_params(const std::filesystem::path &_config_path,
     std::string params_file_path = config_output_dir / "config.yaml";
     if (_new_dir) {
       // copy _config_path to params_file_path
-      ret = std::system(
-          ("cp " + _config_path.string() + " " + params_file_path).c_str());
+      std::filesystem::copy_file(_config_path, params_file_path);
     }
     // write data_path into config.yaml
     std::ofstream ofs(params_file_path, std::ios::app);
@@ -284,8 +283,7 @@ void read_scene_params(const std::filesystem::path &_scene_config_path,
       config_output_dir / _scene_config_path.filename();
   if (_new_dir) {
     // copy _config_path to params_file_path
-    auto ret = std::system(
-        ("cp " + _scene_config_path.string() + " " + params_file_path).c_str());
+    std::filesystem::copy_file(_scene_config_path, params_file_path);
   }
 
   /* Start reading parameters */
@@ -349,8 +347,7 @@ void read_base_params(const std::filesystem::path &_base_config_path,
       config_output_dir / _base_config_path.filename();
   // copy _config_path to params_file_path
   if (_new_dir) {
-    auto ret = std::system(
-        ("cp " + _base_config_path.string() + " " + params_file_path).c_str());
+    std::filesystem::copy_file(_base_config_path, params_file_path);
   }
 
   /* Start reading parameters */
