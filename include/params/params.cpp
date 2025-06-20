@@ -133,9 +133,13 @@ void read_params(const std::filesystem::path &_config_path,
     ss << "_" << _config_path.filename().string();
     k_output_path = k_package_path / "output" / ss.str();
     std::filesystem::create_directories(k_output_path);
-    auto ret = std::system(("ln -sfn " + k_output_path.string() + " " +
-                            (k_package_path / "output" / "latest_run").string())
-                               .c_str());
+    std::error_code ec;
+    std::filesystem::remove(k_package_path / "output" / "latest_run", ec);
+    std::filesystem::create_symlink(
+        k_output_path, k_package_path / "output" / "latest_run", ec);
+    if (ec) {
+      std::cerr << "Failed to create symlink: " << ec.message() << std::endl;
+    }
 
     k_model_path = k_output_path / "model";
     auto config_output_dir = k_model_path / "config/scene";
