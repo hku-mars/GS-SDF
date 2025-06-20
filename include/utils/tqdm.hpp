@@ -74,7 +74,7 @@ inline void clamp(double &x, double a, double b) {
     x = b;
 }
 
-double calc_progress(const index &iters_done, const index &num_iters) {
+inline double calc_progress(const index &iters_done, const index &num_iters) {
   double denominator = num_iters;
   if (num_iters == 0)
     denominator += 1e-9;
