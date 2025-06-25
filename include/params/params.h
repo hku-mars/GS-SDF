@@ -26,7 +26,7 @@ extern float k_x_max, k_x_min, k_y_max, k_y_min, k_z_max, k_z_min, k_min_range,
     k_max_range;
 extern float k_inner_map_size, k_map_size, k_map_size_inv, k_boundary_size;
 extern float k_leaf_size, k_leaf_size_inv;
-extern int k_octree_level, k_fill_level;
+extern int k_octree_level;
 extern int k_map_resolution;
 
 extern int k_iter_step, k_sdf_iter_step, k_gs_iter_step, k_export_interval,

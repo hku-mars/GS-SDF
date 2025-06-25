@@ -33,7 +33,6 @@ max_pt_num: 5000000
 
 # scene config
 leaf_sizes: 0.4
-fill_level: 1
 bce_sigma: 1e-1 # if get floaters, increase this value
 
 outlier_remove: 0 # unnecessary for static scenes

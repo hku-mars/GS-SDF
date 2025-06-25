@@ -29,7 +29,7 @@ float k_x_max, k_x_min, k_y_max, k_y_min, k_z_max, k_z_min, k_min_range,
 float k_inner_map_size, k_map_size, k_map_size_inv, k_boundary_size;
 
 float k_leaf_size, k_leaf_size_inv;
-int k_octree_level, k_fill_level;
+int k_octree_level;
 int k_map_resolution;
 
 int k_iter_step, k_sdf_iter_step, k_gs_iter_step, k_export_interval,
@@ -190,7 +190,6 @@ void read_params(const std::filesystem::path &_config_path,
   fsSettings["sdf_iter_step"] >> k_sdf_iter_step;
   fsSettings["gs_iter_step"] >> k_gs_iter_step;
 
-  fsSettings["fill_level"] >> k_fill_level;
   fsSettings["leaf_sizes"] >> k_leaf_size;
   k_leaf_size_inv = 1.0f / k_leaf_size;
   fsSettings["bce_sigma"] >> k_bce_sigma;
@@ -260,10 +259,6 @@ void read_params(const std::filesystem::path &_config_path,
     k_map_size_inv = 1.0f / k_map_size;
 
     k_boundary_size = k_leaf_size;
-
-    if (k_fill_level > k_octree_level) {
-      k_fill_level = k_octree_level;
-    }
   } else {
     throw std::runtime_error("map is not set in the config file");
   }
@@ -488,10 +483,6 @@ void read_pt_params() {
   k_map_resolution = std::pow(2, k_octree_level);
   k_map_size = k_map_resolution * k_leaf_size;
   k_map_size_inv = 1.0f / k_map_size;
-
-  if (k_fill_level > k_octree_level) {
-    k_fill_level = k_octree_level;
-  }
 
   k_package_path = fsSettings["package_path"];
 }

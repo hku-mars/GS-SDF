@@ -740,10 +740,6 @@ bool NeuralSLAM::build_occ_map() {
   std::cout << "Leaf size: " << k_leaf_size
             << "Octree level: " << k_octree_level << std::endl;
 
-  if (k_fill_level > k_octree_level) {
-    k_fill_level = k_octree_level;
-  }
-
   local_map_ptr = std::make_shared<LocalMap>(
       k_map_origin, k_x_min, k_x_max, k_y_min, k_y_max, k_z_min, k_z_max);
   for (auto &p : local_map_ptr->named_parameters()) {
