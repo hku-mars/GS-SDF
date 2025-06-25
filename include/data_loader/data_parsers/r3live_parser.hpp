@@ -16,7 +16,7 @@ struct R3live : Rosbag {
     dataset_name_ = bag_path_.filename();
     dataset_name_ = dataset_name_.replace_extension();
 
-    pose_topic = "/Odometry";
+    color_pose_topic = "/Odometry";
     color_topic = "/camera/image_color/compressed";
     depth_topic = "/cloud_registered_body";
 

@@ -19,8 +19,9 @@ struct Fastlivo : Rosbag {
     dataset_name_ = bag_path_.filename();
     dataset_name_ = dataset_name_.replace_extension();
 
-    pose_topic = "/aft_mapped_to_init";
+    color_pose_topic = "/aft_mapped_to_init";
     color_topic = "/origin_img";
+    depth_pose_topic = "/aft_mapped_to_init";
     depth_topic = "/cloud_registered_body";
 
     load_intrinsics();
