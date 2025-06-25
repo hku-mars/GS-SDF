@@ -931,7 +931,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   int image_type;
   std::string image_type_name;
   std::filesystem::path output_dir, gt_color_path, render_color_path,
-      gt_depth_path, render_depth_path;
+      gt_depth_path, render_depth_path, render_normal_path;
 
   if (!eval) {
     image_type = dataparser::DataType::RawColor;
@@ -951,10 +951,12 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
     render_color_path = color_path / "renders";
     gt_depth_path = depth_path / "gt";
     render_depth_path = depth_path / "renders";
+    render_normal_path = depth_path / "normal";
 
     // Create all directories at once instead of in create_dir function
     std::vector<std::filesystem::path> paths = {
-        gt_color_path, render_color_path, gt_depth_path, render_depth_path};
+        gt_color_path, render_color_path, gt_depth_path, render_depth_path,
+        render_normal_path};
     for (const auto &path : paths) {
       std::filesystem::create_directories(path);
     }
@@ -962,8 +964,8 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
     // If not eval, create test directories too
     if (!eval) {
       std::filesystem::path test_dir = log_path / "test";
-      for (const auto &subdir :
-           {"color/gt", "color/renders", "depth/gt", "depth/renders", "acc"}) {
+      for (const auto &subdir : {"color/gt", "color/renders", "depth/gt",
+                                 "depth/renders", "normal"}) {
         std::filesystem::create_directories(test_dir / subdir);
       }
     }
@@ -974,14 +976,14 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   auto height = data_loader_ptr->dataparser_ptr_->sensor_.camera.height;
 
   // Pre-allocate reusable buffers for image processing
-  cv::Mat cat_color, cat_depth, depth_colormap, acc_colormap;
+  cv::Mat cat_color, cat_depth, depth_colormap;
 
   // Prepare a queue for background image writing
   struct ImageSaveTask {
     unsigned long index;
     int image_type;
     std::filesystem::path base_dir;
-    torch::Tensor render;
+    std::map<std::string, torch::Tensor> renders;
   };
   std::vector<ImageSaveTask> save_queue;
   int reserve_size = 16;
@@ -990,40 +992,44 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   // Periodically flush save queue to avoid excessive memory usage
   auto flush_save_queue = [&save_queue, this]() {
 #pragma omp parallel for
-    for (const auto &task : save_queue) {
-      int offset = 0;
-      std::string task_type;
-      if (task.image_type % 2 == 0) {
-        task_type = "color";
-      } else {
-        offset = -1;
-        task_type = "depth";
-      }
-      auto output_path = task.base_dir / task_type;
+    for (auto &task : save_queue) {
+      // gt color
       auto gt_file = data_loader_ptr->dataparser_ptr_->get_file(
-          task.index, task.image_type + offset);
-      auto gt_file_name = gt_file.filename().replace_extension(".png");
-      auto render_file = task.base_dir / task_type / "renders" / gt_file_name;
-      auto cv_render = utils::tensor_to_cv_mat(task.render);
-      auto gt = data_loader_ptr->dataparser_ptr_->get_image_cv_mat(
           task.index, task.image_type);
-      gt_file = task.base_dir / task_type / "gt" / gt_file_name;
-      if (offset == 0) {
-        cv::imwrite(render_file, cv_render);
-        if (data_loader_ptr->dataparser_ptr_->sensor_.camera.scale != 1.0f) {
-          cv::resize(
-              gt, gt,
-              cv::Size(
-                  data_loader_ptr->dataparser_ptr_->sensor_.camera.width,
-                  data_loader_ptr->dataparser_ptr_->sensor_.camera.height));
-        }
-        cv::imwrite(gt_file, gt);
-      } else {
+      auto gt_file_name = gt_file.filename();
+      auto gt_color_path = task.base_dir / "color/gt" / gt_file_name;
+      if (data_loader_ptr->dataparser_ptr_->sensor_.camera.scale != 1.0f) {
+        auto gt = data_loader_ptr->dataparser_ptr_->get_image_cv_mat(
+            task.index, task.image_type);
+        cv::resize(
+            gt, gt,
+            cv::Size(data_loader_ptr->dataparser_ptr_->sensor_.camera.width,
+                     data_loader_ptr->dataparser_ptr_->sensor_.camera.height));
+        cv::imwrite(gt_color_path, gt);
+      } else if (!std::filesystem::exists(gt_color_path)) {
+        // ln gt_file to gt_color_path
+        // get gt_file's absolute path
+        gt_file = std::filesystem::absolute(gt_file);
+        std::filesystem::create_symlink(gt_file, gt_color_path);
+      }
+      // render color
+      auto render_file = task.base_dir / "color/renders" / gt_file_name;
+      auto cv_render =
+          utils::tensor_to_cv_mat(task.renders["color"].clamp(0.0f, 1.0f));
+      cv::imwrite(render_file, cv_render);
+
+      // render depth
+      if (task.renders.find("depth") != task.renders.end()) {
+        render_file = task.base_dir / "depth/renders" / gt_file_name;
+        cv_render = utils::tensor_to_cv_mat(task.renders["depth"]);
         cv::imwrite(render_file, utils::apply_colormap_to_depth(cv_render));
-        if (!gt.empty()) {
-          auto gt_depth_colormap = utils::apply_colormap_to_depth(gt);
-          cv::imwrite(gt_file, gt_depth_colormap);
-        }
+      }
+      // render normal
+      if (task.renders.find("render_normal") != task.renders.end()) {
+        render_file = task.base_dir / "normal" / gt_file_name;
+        cv_render = utils::tensor_to_cv_mat(
+            task.renders["render_normal"][0] * 0.5f + 0.5f);
+        cv::imwrite(render_file, cv_render);
       }
     }
     save_queue.clear();
@@ -1055,16 +1061,17 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
       continue;
     }
 
-    // Convert tensors to OpenCV format once
-    auto render_color = render_results["color"].clamp(0.0f, 1.0f);
-    auto render_depth = render_results["depth"];
     // Queue images for saving - use test path for certain frames if needed
     bool is_test = (!eval) && k_llff && (i % 8 == 0);
     std::filesystem::path base_dir = is_test ? (log_path / "test") : output_dir;
 
     // Queue image saving tasks
-    save_queue.push_back({i, image_type, base_dir, render_color});
-    save_queue.push_back({i, image_type + 1, base_dir, render_depth});
+    save_queue.push_back(
+        {i, image_type, base_dir,
+         std::map<std::string, torch::Tensor>{
+             {"color", render_results["color"]},
+             {"depth", render_results["depth"]},
+             {"render_normal", render_results["render_normal"]}}});
     // Flush save queue periodically to avoid excessive memory usage
     if (save_queue.size() >= reserve_size) {
       flush_save_queue();

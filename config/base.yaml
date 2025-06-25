@@ -56,7 +56,6 @@ vis_frame_step: 10
 export_interval: 999 # every export_interval frames, the mesh will be exported
 export_colmap_format: 0 # 0: disable; 1: for 3dgs (txt); 2: for nerfstudio colmap; 3: for 3dgs (bin)
 export_train_pcl: 0 # 0: disable; 1: enable
-export_depth: 1
 export_mesh: 1
 test_idx: 3 # export test img id
 vis_attribute: 1 # 0: disable to save storage; 1: normal;
