@@ -44,7 +44,6 @@ extern int k_geo_num_layer;
 extern int k_n_levels, k_n_features_per_level, k_log2_hashmap_size;
 
 // abalation parmaeter
-extern int k_m2mapping;
 extern float k_bce_sigma, k_bce_isigma, k_truncated_dis;
 extern float k_sdf_weight, k_eikonal_weight, k_curvate_weight, k_rgb_weight,
     k_dssim_weight, k_isotropic_weight;

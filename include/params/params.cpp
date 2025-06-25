@@ -51,7 +51,6 @@ int k_n_levels, k_n_features_per_level, k_log2_hashmap_size;
 
 // abalation parmaeter
 bool mapper_init, mapper_update;
-int k_m2mapping;
 float k_bce_sigma, k_bce_isigma, k_truncated_dis;
 float k_sdf_weight, k_eikonal_weight, k_curvate_weight, k_rgb_weight,
     k_dssim_weight, k_isotropic_weight;
@@ -416,8 +415,6 @@ void read_base_params(const std::filesystem::path &_base_config_path,
   fsSettings["sky_init"] >> k_sky_init;
 
   fsSettings["vis_attribute"] >> k_vis_attribute;
-
-  fsSettings["m2mapping"] >> k_m2mapping;
 
   fsSettings["depth_type"] >> k_depth_type;
   fsSettings["near"] >> k_near;

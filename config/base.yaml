@@ -26,7 +26,6 @@ lr: 5e-3
 lr_end: 1e-4
 
 # SDF params
-m2mapping: 1 # 0: disable; 1: enable; 2: preload
 sdf_weight: 1.0
 eikonal_weight: 1e-1 # it will greatly affect structure
 curvate_weight: 0.0 #5e-4 # should be the same loss level to eikonal loss
