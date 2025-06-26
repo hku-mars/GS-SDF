@@ -926,8 +926,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   // Determine image type and create necessary directories once
   int image_type;
   std::string image_type_name;
-  std::filesystem::path output_dir, gt_color_path, render_color_path,
-      gt_depth_path, render_depth_path, render_normal_path;
+  std::filesystem::path output_dir;
 
   if (!eval) {
     image_type = dataparser::DataType::RawColor;
@@ -941,18 +940,18 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
 
   // Only create directories if saving is enabled
   if (save) {
-    std::filesystem::path color_path = output_dir / "color";
-    std::filesystem::path depth_path = output_dir / "depth";
-    gt_color_path = color_path / "gt";
-    render_color_path = color_path / "renders";
-    gt_depth_path = depth_path / "gt";
-    render_depth_path = depth_path / "renders";
-    render_normal_path = depth_path / "normal";
+    auto color_path = output_dir / "color";
+    auto depth_path = output_dir / "depth";
+    auto normal_path = output_dir / "normal";
+    auto gt_color_path = color_path / "gt";
+    auto render_color_path = color_path / "renders";
+    auto gt_depth_path = depth_path / "gt";
+    auto render_depth_path = depth_path / "renders";
 
     // Create all directories at once instead of in create_dir function
     std::vector<std::filesystem::path> paths = {
         gt_color_path, render_color_path, gt_depth_path, render_depth_path,
-        render_normal_path};
+        normal_path};
     for (const auto &path : paths) {
       std::filesystem::create_directories(path);
     }
