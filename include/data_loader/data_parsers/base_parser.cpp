@@ -592,6 +592,48 @@ DataParser::load_poses(const std::string &pose_path, const bool &with_head,
         }
       }
     }
+  } else if (pose_type == 6) {
+    // modified TUM format: idx,t,qw,qx,qy,qz,x,y,z
+    torch::Tensor pose_tensor = torch::eye(4, torch::kFloat);
+    torch::Tensor quat_tensor = torch::zeros(4, torch::kFloat);
+    int i = 0;
+    while (std::getline(file, line)) {
+      std::istringstream iss(line);
+      std::string token;
+      int field_idx = 0;
+      while (std::getline(iss, token, ',')) {
+        double value = std::stod(token);
+
+        if (field_idx == 0) {
+          // idx - skip this field
+        } else if (field_idx == 1) {
+          // timestamp
+          // time_stamps.push_back(value);
+        } else if (field_idx >= 2 && field_idx <= 5) {
+          // qw, qx, qy, qz
+          quat_tensor[field_idx - 2] = value;
+        } else if (field_idx >= 6 && field_idx <= 8) {
+          // x, y, z
+          pose_tensor[field_idx - 6][3] = value;
+        }
+        field_idx++;
+
+        if (field_idx == 9) {
+          auto rot = utils::quat_to_rot(quat_tensor, false);
+          pose_tensor.index_put_(
+              {torch::indexing::Slice(0, 3), torch::indexing::Slice(0, 3)},
+              rot);
+          if (inverse) {
+            pose_tensor = pose_tensor.inverse();
+          }
+          poses.push_back(pose_tensor);
+          pose_tensor = torch::eye(4, torch::kFloat); // need new tensor
+          quat_tensor = torch::zeros(4, torch::kFloat);
+
+          break; // exit the inner loop after processing one line
+        }
+      }
+    }
   }
   file.close();
 
@@ -724,16 +766,25 @@ void DataParser::load_depths(const std::string &file_extension,
 
       train_depth_filelists_.resize(train_depth_num);
 
+      bool world = false;
 #pragma omp parallel for
       for (int i = 1; i <= raw_depth_num; i++) {
-        auto points_ndir_dirn = get_distance_ndir_zdirn(i - 1);
-
-        auto depth = points_ndir_dirn[0].view({-1, 1});
-        auto direction = points_ndir_dirn[1].view({-1, 3});
         auto pose = get_pose(i - 1, DataType::RawDepth).slice(0, 0, 3);
         auto pos = pose.slice(1, 3, 4).squeeze();
         auto rot = pose.slice(1, 0, 3);
-        direction = direction.mm(rot.t());
+
+        torch::Tensor depth, direction;
+        if (world) {
+          auto pointcloud = get_depth_image(i - 1);
+          auto dist = pointcloud - pos.view({1, 3});
+          depth = dist.norm(2, -1, true);
+          direction = dist / depth;
+        } else {
+          auto points_ndir_dirn = get_distance_ndir_zdirn(i - 1);
+          depth = points_ndir_dirn[0].view({-1, 1});
+          direction = points_ndir_dirn[1].view({-1, 3});
+          direction = direction.mm(rot.t());
+        }
 
         // It should not be done here
         // auto valid_mask = depth.squeeze() > k_min_range;
@@ -791,6 +842,14 @@ void DataParser::load_intrinsics() {
   sensor_.camera.fy = scale * sensor_.camera.fy;
   sensor_.camera.cx = scale * sensor_.camera.cx;
   sensor_.camera.cy = scale * sensor_.camera.cy;
+
+  std::cout << "Camera intrinsics: \n"
+            << "Width: " << sensor_.camera.width << "\n"
+            << "Height: " << sensor_.camera.height << "\n"
+            << "fx: " << sensor_.camera.fx << "\n"
+            << "fy: " << sensor_.camera.fy << "\n"
+            << "cx: " << sensor_.camera.cx << "\n"
+            << "cy: " << sensor_.camera.cy << "\n";
 }
 
 std::vector<at::Tensor> DataParser::get_depth_zdir(const int &idx) {

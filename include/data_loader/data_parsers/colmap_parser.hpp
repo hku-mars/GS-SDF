@@ -11,32 +11,39 @@ struct Colmap : DataParser {
                   const sensor::Sensors &_sensor = sensor::Sensors(),
                   const int &_ds_pt_num = 1e5,
                   const float &_max_time_diff_camera_and_pose = 0.0f,
-                  const float &_max_time_diff_lidar_and_pose = 0.0f)
+                  const float &_max_time_diff_lidar_and_pose = 0.0f,
+                  bool is_father = false)
       : DataParser(_dataset_path, _device, _preload, _res_scale,
                    coords::SystemType::OpenCV, _sensor, _ds_pt_num,
                    _max_time_diff_camera_and_pose,
                    _max_time_diff_lidar_and_pose) {
     dataset_name_ = dataset_path_.filename();
 
-    depth_type_ = DepthType::PCD;
-    load_intrinsics();
-    load_data();
+    if (!is_father) {
+      color_path_ = dataset_path_ / "colmap/images";
+      pose_path_ = dataset_path_ / "colmap/postrior_lidar/images.txt";
+      depth_path_ = dataset_path_ / "depths";
+      depth_pose_path_ = dataset_path_ / "depths/lidar_pose.txt";
+      mask_file_ = dataset_path_ / "images/right_undistorded_mask.jpg";
 
-    int skip_first_num = 0;
-    post_process(skip_first_num);
+      depth_type_ = DepthType::PCD;
+      image_pose_type_ = 4;
+      depth_pose_type_ = 5;
+
+      load_intrinsics();
+      load_data();
+
+      int skip_first_num = 0;
+      post_process(skip_first_num);
+    }
   }
 
-  std::filesystem::path depth_pose_path_;
+  std::filesystem::path depth_pose_path_, mask_file_;
+  int image_pose_type_, depth_pose_type_ = 0;
   void load_data() override {
     time_stamps_ = torch::Tensor(); // reset time_stamps
 
     // export undistorted images
-    color_path_ = dataset_path_ / "colmap/images";
-    auto image_prefix = color_path_.stem();
-    pose_path_ = dataset_path_ / "colmap/postrior_lidar/images.txt";
-    depth_path_ = dataset_path_ / "depths";
-    depth_pose_path_ = dataset_path_ / "depths/lidar_pose.txt";
-    auto mask_file = dataset_path_ / "images/right_undistorded_mask.jpg";
 
     if (!std::filesystem::exists(color_path_)) {
       throw std::runtime_error("color_path_ does not exist: " +
@@ -54,7 +61,8 @@ struct Colmap : DataParser {
       throw std::runtime_error("depth_path_ does not exist: " +
                                depth_path_.string());
     }
-    auto color_info = load_poses(pose_path_, false, 4, true, "", true);
+    auto color_info =
+        load_poses(pose_path_, false, image_pose_type_, true, "", true);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
     std::cout << "Loaded " << color_poses_.size(0) << " color poses\n";
@@ -63,11 +71,12 @@ struct Colmap : DataParser {
     std::cout << "Loaded " << raw_color_filelists_.size() << " color images\n";
     TORCH_CHECK(color_poses_.size(0) == raw_color_filelists_.size());
 
-    if (std::filesystem::exists(mask_file)) {
-      mask = get_color_image(mask_file, 0) > 0;
+    if (std::filesystem::exists(mask_file_)) {
+      mask = get_color_image(mask_file_, 0) > 0;
     }
 
-    depth_poses_ = std::get<0>(load_poses(depth_pose_path_, false, 5));
+    depth_poses_ =
+        std::get<0>(load_poses(depth_pose_path_, false, depth_pose_type_));
     std::cout << "Loaded " << depth_poses_.size(0) << " depth poses\n";
     TORCH_CHECK(depth_poses_.size(0) > 0);
 
