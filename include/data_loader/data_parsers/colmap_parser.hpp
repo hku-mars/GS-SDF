@@ -5,6 +5,11 @@
 
 namespace dataparser {
 struct Colmap : DataParser {
+
+  std::filesystem::path depth_pose_path_, mask_file_;
+  int image_pose_type_, depth_pose_type_ = 0;
+  bool image_pose_inverse_ = false;
+
   explicit Colmap(const std::filesystem::path &_dataset_path,
                   const torch::Device &_device = torch::kCPU,
                   const bool &_preload = true, const float &_res_scale = 1.0,
@@ -28,6 +33,7 @@ struct Colmap : DataParser {
 
       depth_type_ = DepthType::PCD;
       image_pose_type_ = 4;
+      image_pose_inverse_ = true;
       depth_pose_type_ = 5;
 
       load_intrinsics();
@@ -38,8 +44,6 @@ struct Colmap : DataParser {
     }
   }
 
-  std::filesystem::path depth_pose_path_, mask_file_;
-  int image_pose_type_, depth_pose_type_ = 0;
   void load_data() override {
     time_stamps_ = torch::Tensor(); // reset time_stamps
 
@@ -61,8 +65,8 @@ struct Colmap : DataParser {
       throw std::runtime_error("depth_path_ does not exist: " +
                                depth_path_.string());
     }
-    auto color_info =
-        load_poses(pose_path_, false, image_pose_type_, true, "", true);
+    auto color_info = load_poses(pose_path_, false, image_pose_type_, true, "",
+                                 image_pose_inverse_);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
     std::cout << "Loaded " << color_poses_.size(0) << " color poses\n";
