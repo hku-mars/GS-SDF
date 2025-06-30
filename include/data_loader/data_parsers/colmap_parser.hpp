@@ -11,6 +11,7 @@ struct Colmap : DataParser {
   bool image_pose_inverse_ = false;
 
   explicit Colmap(const std::filesystem::path &_dataset_path,
+                  const std::filesystem::path &_config_path,
                   const torch::Device &_device = torch::kCPU,
                   const bool &_preload = true, const float &_res_scale = 1.0,
                   const sensor::Sensors &_sensor = sensor::Sensors(),
@@ -24,24 +25,23 @@ struct Colmap : DataParser {
                    _max_time_diff_lidar_and_pose) {
     dataset_name_ = dataset_path_.filename();
 
-    if (!is_father) {
-      color_path_ = dataset_path_ / "colmap/images";
-      pose_path_ = dataset_path_ / "colmap/postrior_lidar/images.txt";
-      depth_path_ = dataset_path_ / "depths";
-      depth_pose_path_ = dataset_path_ / "depths/lidar_pose.txt";
-      mask_file_ = dataset_path_ / "images/right_undistorded_mask.jpg";
+    auto config = read_params(_dataset_path, _config_path);
+    color_path_ = config.color_path;
+    color_pose_path_ = config.color_pose_path;
+    depth_path_ = config.depth_path;
+    depth_pose_path_ = config.depth_pose_path;
+    mask_file_ = dataset_path_ / "images/right_undistorded_mask.jpg";
 
-      depth_type_ = DepthType::PCD;
-      image_pose_type_ = 4;
-      image_pose_inverse_ = true;
-      depth_pose_type_ = 5;
+    depth_type_ = config.depth_type;
+    image_pose_type_ = config.color_pose_type;
+    image_pose_inverse_ = config.image_pose_inverse;
+    depth_pose_type_ = config.depth_pose_type;
 
-      load_intrinsics();
-      load_data();
+    load_intrinsics();
+    load_data();
 
-      int skip_first_num = 0;
-      post_process(skip_first_num);
-    }
+    int skip_first_num = 0;
+    post_process(skip_first_num);
   }
 
   void load_data() override {
@@ -53,9 +53,9 @@ struct Colmap : DataParser {
       throw std::runtime_error("color_path_ does not exist: " +
                                color_path_.string());
     }
-    if (!std::filesystem::exists(pose_path_)) {
+    if (!std::filesystem::exists(color_pose_path_)) {
       throw std::runtime_error("pose_path_ does not exist: " +
-                               pose_path_.string());
+                               color_pose_path_.string());
     }
     if (!std::filesystem::exists(depth_pose_path_)) {
       throw std::runtime_error("depth_pose_path_ does not exist: " +
@@ -65,8 +65,8 @@ struct Colmap : DataParser {
       throw std::runtime_error("depth_path_ does not exist: " +
                                depth_path_.string());
     }
-    auto color_info = load_poses(pose_path_, false, image_pose_type_, true, "",
-                                 image_pose_inverse_);
+    auto color_info = load_poses(color_pose_path_, false, image_pose_type_,
+                                 true, "", image_pose_inverse_);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
     std::cout << "Loaded " << color_poses_.size(0) << " color poses\n";

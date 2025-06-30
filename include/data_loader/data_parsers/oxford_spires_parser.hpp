@@ -18,7 +18,7 @@ struct Spires : DataParser {
                    _max_time_diff_camera_and_pose,
                    _max_time_diff_lidar_and_pose) {
     // export undistorted images
-    pose_path_ = dataset_path_ / "color_poses.txt";
+    color_pose_path_ = dataset_path_ / "color_poses.txt";
     depth_pose_path_ = dataset_path_ / "depth_poses.txt";
     color_path_ = dataset_path_ / "undistorted_images";
     depth_path_ = dataset_path_ / "depths"; // origin data
@@ -43,15 +43,15 @@ struct Spires : DataParser {
 
   std::filesystem::path depth_pose_path_;
   void load_data() override {
-    if (!std::filesystem::exists(pose_path_) ||
+    if (!std::filesystem::exists(color_pose_path_) ||
         !std::filesystem::exists(depth_pose_path_) ||
         !std::filesystem::exists(color_path_) ||
         !std::filesystem::exists(depth_path_)) {
-      pose_path_ = dataset_path_ / "gt-tum.txt";
+      color_pose_path_ = dataset_path_ / "gt-tum.txt";
       color_path_ = dataset_path_ / "images" / "cam0";
       depth_path_ = dataset_path_ / "lidar-clouds";
 
-      auto pose_data = load_poses(pose_path_, false, 3);
+      auto pose_data = load_poses(color_pose_path_, false, 3);
       auto T_W_B = std::get<0>(pose_data);
       auto T_W_L = T_W_B.matmul(sensor_.T_B_L);
       time_stamps_ = std::get<1>(pose_data);
@@ -71,8 +71,8 @@ struct Spires : DataParser {
       // export undistorted images
       color_path_ = dataset_path_ / "undistorted_images";
       std::filesystem::create_directories(color_path_);
-      pose_path_ = dataset_path_ / "color_poses.txt";
-      std::ofstream color_pose_file(pose_path_);
+      color_pose_path_ = dataset_path_ / "color_poses.txt";
+      std::ofstream color_pose_file(color_pose_path_);
       for (int i = 0; i < raw_color_filelists_.size(); i++) {
         auto color_image = get_image_cv_mat(i);
         auto undistorted_img = sensor_.camera.undistort(color_image);
@@ -111,7 +111,7 @@ struct Spires : DataParser {
 
     time_stamps_ = torch::Tensor(); // reset time_stamps
 
-    color_poses_ = std::get<0>(load_poses(pose_path_, false, 0));
+    color_poses_ = std::get<0>(load_poses(color_pose_path_, false, 0));
     TORCH_CHECK(color_poses_.size(0) > 0);
     depth_poses_ = std::get<0>(load_poses(depth_pose_path_, false, 0));
     TORCH_CHECK(depth_poses_.size(0) > 0);

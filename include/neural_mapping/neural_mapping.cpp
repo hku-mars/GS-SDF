@@ -29,8 +29,8 @@ NeuralSLAM::NeuralSLAM(const int &mode,
   read_params(_config_path, _data_path, mode);
 
   data_loader_ptr = std::make_unique<dataloader::DataLoader>(
-      k_dataset_path, k_dataset_type, k_device, mode & k_preload, k_res_scale,
-      k_sensor, k_ds_pt_num, k_max_time_diff_camera_and_pose,
+      k_dataset_path, _config_path, k_dataset_type, k_device, mode & k_preload,
+      k_res_scale, k_sensor, k_ds_pt_num, k_max_time_diff_camera_and_pose,
       k_max_time_diff_lidar_and_pose);
 
   if (k_export_colmap_format == 1) {

@@ -11,7 +11,7 @@ struct Replica : DataParser {
                    const int &_ds_pt_num = 1e5)
       : DataParser(_dataset_path, _device, _preload, _res_scale,
                    coords::SystemType::OpenCV, sensor::Sensors(), _ds_pt_num) {
-    pose_path_ = dataset_path_ / "traj.txt";
+    color_pose_path_ = dataset_path_ / "traj.txt";
     color_path_ = dataset_path_ / "results";
     depth_path_ = color_path_;
 
@@ -27,17 +27,17 @@ struct Replica : DataParser {
     //                 (dataset_path_.filename().string() + "_mesh.ply");
 
     load_intrinsics();
-    if (std::filesystem::exists(pose_path_)) {
+    if (std::filesystem::exists(color_pose_path_)) {
       load_data();
     } else {
-      std::cout << "pose_path_ does not exist: " << pose_path_ << std::endl;
+      std::cout << "pose_path_ does not exist: " << color_pose_path_ << std::endl;
     }
   }
 
   std::filesystem::path gt_mesh_path_;
 
   void load_data() override {
-    depth_poses_ = std::get<0>(load_poses(pose_path_, false, 1));
+    depth_poses_ = std::get<0>(load_poses(color_pose_path_, false, 1));
     color_poses_ = depth_poses_;
     TORCH_CHECK(depth_poses_.size(0) > 0);
 

@@ -9,6 +9,30 @@
 
 namespace dataparser {
 
+DataConfig read_params(const std::filesystem::path &_dataset_path,
+                       const std::filesystem::path &_config_path) {
+  cv::FileStorage fsSettings(_config_path, cv::FileStorage::READ);
+  if (!fsSettings.isOpened()) {
+    std::cerr << "ERROR: Wrong path to settings: " << _config_path << "\n";
+    exit(-1);
+  }
+
+  DataConfig config;
+  config.color_path = _dataset_path / std::string(fsSettings["color_path"]);
+  config.color_pose_path =
+      _dataset_path / std::string(fsSettings["color_pose_path"]);
+  config.depth_path = _dataset_path / std::string(fsSettings["depth_path"]);
+  config.depth_pose_path =
+      _dataset_path / std::string(fsSettings["depth_pose_path"]);
+
+  fsSettings["depth_type"] >> config.depth_type;
+
+  fsSettings["color_pose_type"] >> config.color_pose_type;
+  fsSettings["depth_pose_type"] >> config.depth_pose_type;
+
+  return config;
+}
+
 std::vector<std::filesystem::path>
 read_filelists(const std::filesystem::path &directory,
                const std::string &prefix, const std::string &extension) {

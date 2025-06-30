@@ -21,7 +21,7 @@ struct Kitti : DataParser {
     auto base_path = (dataset_path_ / "../../../..").lexically_normal();
     calib_path_ = base_path / "data_odometry_calib/dataset/sequences" /
                   dataset_name_ / "calib.txt";
-    pose_path_ = base_path / "data_odometry_poses/dataset/poses" /
+    color_pose_path_ = base_path / "data_odometry_poses/dataset/poses" /
                  (dataset_name_.string() + ".txt");
     color_path_ = base_path / "data_odometry_color/dataset/sequences" /
                   dataset_name_ / "image_2";
@@ -34,7 +34,7 @@ struct Kitti : DataParser {
 
   void load_data() override {
 
-    auto T_C0_C0 = std::get<0>(load_poses(pose_path_, false, 2));
+    auto T_C0_C0 = std::get<0>(load_poses(color_pose_path_, false, 2));
     TORCH_CHECK(T_C0_C0.size(0) > 0);
     auto T_W_C0 =
         coords::change_world_system(T_C0_C0, coords::SystemType::Kitti);

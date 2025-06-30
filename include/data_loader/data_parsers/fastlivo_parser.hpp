@@ -27,9 +27,9 @@ struct Fastlivo : Rosbag {
     load_intrinsics();
 
     load_data();
-    if (std::filesystem::exists(pose_path_)) {
+    if (std::filesystem::exists(color_pose_path_)) {
     } else {
-      std::cout << "pose_path_ does not exist: " << pose_path_ << std::endl;
+      std::cout << "pose_path_ does not exist: " << color_pose_path_ << std::endl;
     }
   }
 

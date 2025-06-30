@@ -36,6 +36,17 @@ void load_file_list(const std::string &dir_path,
                     const std::string &prefix,
                     const std::string &file_extension = ".ply");
 
+struct DataConfig {
+  std::filesystem::path color_path, color_pose_path, depth_path,
+      depth_pose_path;
+  DepthType depth_type;
+  int color_pose_type, depth_pose_type;
+  bool image_pose_inverse = false;
+};
+
+DataConfig read_params(const std::filesystem::path &_dataset_path,
+                       const std::filesystem::path &_config_path);
+
 struct DataParser {
   typedef std::shared_ptr<DataParser> Ptr;
   explicit DataParser(const std::string &_dataset_path,
@@ -56,7 +67,7 @@ struct DataParser {
         };
 
   std::filesystem::path dataset_path_, dataset_name_;
-  std::filesystem::path pose_path_, calib_path_, color_path_, depth_path_;
+  std::filesystem::path color_pose_path_, calib_path_, color_path_, depth_path_;
 
   std::filesystem::path eval_pose_path_, eval_color_path_, eval_depth_path_;
 

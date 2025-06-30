@@ -25,7 +25,7 @@ struct Rosbag : DataParser {
     dataset_name_ = bag_path_.filename();
     dataset_name_ = dataset_name_.replace_extension();
 
-    pose_path_ = dataset_path_ / "color_poses.txt";
+    color_pose_path_ = dataset_path_ / "color_poses.txt";
     depth_pose_path_ = dataset_path_ / "depth_poses.txt";
     color_path_ = dataset_path_ / "images";
     depth_path_ = dataset_path_ / "depths";
@@ -122,7 +122,7 @@ struct Rosbag : DataParser {
       return (min_delta < 0.01) ? closest_pose : nullptr;
     };
 
-    std::ofstream color_pose_file(pose_path_);
+    std::ofstream color_pose_file(color_pose_path_);
     std::ofstream depth_pose_file(depth_pose_path_);
 
     int color_count = 0;
@@ -288,7 +288,7 @@ struct Rosbag : DataParser {
 #endif
 
   void load_data() override {
-    if (!std::filesystem::exists(pose_path_) ||
+    if (!std::filesystem::exists(color_pose_path_) ||
         !std::filesystem::exists(depth_pose_path_) ||
         !std::filesystem::exists(color_path_) ||
         !std::filesystem::exists(depth_path_)) {
@@ -300,7 +300,7 @@ struct Rosbag : DataParser {
 #endif
     }
 
-    color_poses_ = std::get<0>(load_poses(pose_path_, false, 0));
+    color_poses_ = std::get<0>(load_poses(color_pose_path_, false, 0));
     TORCH_CHECK(color_poses_.size(0) > 0);
     depth_poses_ = std::get<0>(load_poses(depth_pose_path_, false, 0));
     TORCH_CHECK(depth_poses_.size(0) > 0);

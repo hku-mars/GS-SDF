@@ -6,13 +6,13 @@
 #include "utils/bin_utils/endian.h"
 #include "utils/ray_utils/ray_utils.h"
 
+#include "data_loader/data_parsers/colmap_parser.hpp"
 #include "data_loader/data_parsers/fastlivo_parser.hpp"
 #include "data_loader/data_parsers/kitti_parser.hpp"
 #include "data_loader/data_parsers/oxford_spires_parser.hpp"
 #include "data_loader/data_parsers/r3live_parser.hpp"
 #include "data_loader/data_parsers/replica_parser.hpp"
 #include "data_parsers/neuralrgbd_parser.hpp"
-#include "data_loader/data_parsers/colmap_parser.hpp"
 #include "pcl/io/pcd_io.h"
 #include "utils/ply_utils/ply_utils_pcl.h"
 #include "utils/ply_utils/ply_utils_torch.h"
@@ -29,6 +29,7 @@ enum DatasetType {
 
 namespace dataloader {
 DataLoader::DataLoader(const std::string &dataset_path,
+                       const std::filesystem::path &_config_path,
                        const int &_dataset_type, const torch::Device &_device,
                        const bool &_preload, const float &_res_scale,
                        const sensor::Sensors &_sensor, const int &_ds_pt_num,
@@ -63,8 +64,9 @@ DataLoader::DataLoader(const std::string &dataset_path,
     break;
   case DatasetType::Colmap:
     dataparser_ptr_ = std::make_shared<dataparser::Colmap>(
-        dataset_path, device_, _preload, _res_scale, _sensor, _ds_pt_num,
-        _max_time_diff_camera_and_pose, _max_time_diff_lidar_and_pose);
+        dataset_path, _config_path, device_, _preload, _res_scale, _sensor,
+        _ds_pt_num, _max_time_diff_camera_and_pose,
+        _max_time_diff_lidar_and_pose);
     break;
   default:
     throw std::runtime_error("Unsupported dataset type");
