@@ -7,8 +7,8 @@ namespace dataparser {
 struct Colmap : DataParser {
 
   std::filesystem::path depth_pose_path_, mask_file_;
-  int image_pose_type_, depth_pose_type_ = 0;
-  bool image_pose_inverse_ = false;
+  int color_pose_type_, depth_pose_type_ = 0;
+  bool color_pose_w2c_ = false;
 
   explicit Colmap(const std::filesystem::path &_dataset_path,
                   const std::filesystem::path &_config_path,
@@ -33,8 +33,8 @@ struct Colmap : DataParser {
     mask_file_ = dataset_path_ / "images/right_undistorded_mask.jpg";
 
     depth_type_ = config.depth_type;
-    image_pose_type_ = config.color_pose_type;
-    image_pose_inverse_ = config.image_pose_inverse;
+    color_pose_type_ = config.color_pose_type;
+    color_pose_w2c_ = config.color_pose_w2c;
     depth_pose_type_ = config.depth_pose_type;
 
     load_intrinsics();
@@ -65,8 +65,8 @@ struct Colmap : DataParser {
       throw std::runtime_error("depth_path_ does not exist: " +
                                depth_path_.string());
     }
-    auto color_info = load_poses(color_pose_path_, false, image_pose_type_,
-                                 true, "", image_pose_inverse_);
+    auto color_info = load_poses(color_pose_path_, false, color_pose_type_,
+                                 true, "", color_pose_w2c_);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
     std::cout << "Loaded " << color_poses_.size(0) << " color poses\n";

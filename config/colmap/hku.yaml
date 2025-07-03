@@ -19,6 +19,7 @@ dataset_type: 6
 color_path: "img"
 color_pose_path: "image_pose.txt"
 color_pose_type: 6
+color_pose_w2c: 0
 depth_path: "pc"
 depth_pose_path: "depth_pose.txt"
 depth_pose_type: 6

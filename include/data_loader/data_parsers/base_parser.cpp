@@ -28,6 +28,7 @@ DataConfig read_params(const std::filesystem::path &_dataset_path,
   fsSettings["depth_type"] >> config.depth_type;
 
   fsSettings["color_pose_type"] >> config.color_pose_type;
+  fsSettings["color_pose_w2c"] >> config.color_pose_w2c;
   fsSettings["depth_pose_type"] >> config.depth_pose_type;
 
   return config;
