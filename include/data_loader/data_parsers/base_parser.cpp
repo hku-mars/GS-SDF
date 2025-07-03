@@ -48,14 +48,12 @@ read_filelists(const std::filesystem::path &directory,
   return image_files;
 }
 
-bool computePairNum(std::string pair1, std::string pair2) {
-  std::string num1 = pair1.substr(pair1.find_last_of('/'));
+bool computePairNum(std::filesystem::path pair1, std::filesystem::path pair2) {
+  std::string num1 = pair1.filename().stem().string();
   num1 = num1.substr(num1.find_first_of("0123456789"));
-  num1 = num1.substr(0, num1.find_last_of('.'));
 
-  std::string num2 = pair2.substr(pair2.find_last_of('/'));
+  std::string num2 = pair2.filename().stem().string();
   num2 = num2.substr(num2.find_first_of("0123456789"));
-  num2 = num2.substr(0, num2.find_last_of('.'));
   return std::stod(num1) < std::stod(num2);
 }
 
