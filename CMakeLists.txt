@@ -100,7 +100,7 @@ add_library(mesher include/utils/utils.cpp include/mesher/mesher.cpp)
 target_link_libraries(mesher ply_utils cumcubes)
 
 add_library(data_parser include/data_loader/data_parsers/base_parser.cpp)
-target_link_libraries(data_parser ${TORCH_LIBRARIES} ply_utils)
+target_link_libraries(data_parser ${OpenCV_LIBS} ${TORCH_LIBRARIES} ply_utils)
 
 add_library(ray_utils include/utils/ray_utils/ray_utils.cpp)
 target_link_libraries(ray_utils ${TORCH_LIBRARIES})
@@ -134,13 +134,8 @@ add_library(optimizer include/optimizer/loss.cpp)
 target_link_libraries(optimizer ${TORCH_LIBRARIES} loss_utils)
 
 add_library(neural_mapping_lib include/neural_mapping/neural_mapping.cpp)
-target_link_libraries(
-  neural_mapping_lib
-  ${OpenCV_LIBS}
-  data_loader
-  optimizer
-  neural_net
-  neural_gaussian)
+target_link_libraries(neural_mapping_lib data_loader optimizer neural_net
+                      neural_gaussian)
 
 if(NOT WIN32)
   target_link_libraries(neural_mapping_lib dw)
