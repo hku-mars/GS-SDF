@@ -762,6 +762,9 @@ sensor_msgs::PointCloud2 tensor_to_pointcloud_msg(const torch::Tensor &_xyz,
 
 sensor_msgs::Image tensor_to_img_msg(const torch::Tensor &_image) {
   auto image_cv = tensor_to_cv_mat(_image);
+  if (image_cv.type() == CV_16UC1) {
+    image_cv = apply_colormap_to_depth(image_cv);
+  }
   sensor_msgs::Image img_msg;
   img_msg.height = image_cv.rows;
   img_msg.width = image_cv.cols;

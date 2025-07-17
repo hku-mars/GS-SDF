@@ -844,7 +844,7 @@ void NeuralGS::prune_gs(const int &iter,
   auto is_prune = opacity < k_prune_opa;
   auto n_prune_opa = is_prune.sum().item<int>();
   if ((n_prune_opa > 0) && k_debug) {
-    cout << "Prune " << n_prune_opa << " low opa gaussians\n";
+    cout << "\nPrune " << n_prune_opa << " low opa gaussians\n";
   }
   auto scale = get_scale();
   scale = scale.slice(-1, 0, 2);
@@ -854,7 +854,7 @@ void NeuralGS::prune_gs(const int &iter,
   if (n_prune_small > 0) {
     is_prune |= is_too_small;
     if (k_debug) {
-      cout << "Prune " << n_prune_small << " small gaussians\n";
+      cout << "\nPrune " << n_prune_small << " small gaussians\n";
     }
   }
 
@@ -867,7 +867,7 @@ void NeuralGS::prune_gs(const int &iter,
       int n_prune_big = is_too_big.sum().item<int>();
       if (n_prune_big > 0) {
         is_prune |= is_too_big;
-        std::cout << "Prune " << n_prune_big << " too big splats\n";
+        std::cout << "\nPrune " << n_prune_big << " too big splats\n";
       }
     }
   }
@@ -884,7 +884,7 @@ void NeuralGS::prune_invisible_gs(
 
     int n_prune = prune_gs(_p_optimizer, is_prune);
     if ((n_prune > 0) && k_debug) {
-      cout << "Prune " << n_prune << " invisible gaussians\n";
+      cout << "\nPrune " << n_prune << " invisible gaussians\n";
     }
   }
 }
@@ -896,7 +896,7 @@ void NeuralGS::prune_nan_gs(
 
   int n_prune = prune_gs(_p_optimizer, is_prune);
   if ((n_prune > 0) && k_debug) {
-    cout << "Prune " << n_prune << " nan gaussians\n";
+    cout << "\nPrune " << n_prune << " nan gaussians\n";
   }
 }
 
