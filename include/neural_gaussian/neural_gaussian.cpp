@@ -575,14 +575,17 @@ void NeuralGS::train_callback(
         if (_iter > k_refine_start_iter) {
           if ((_iter % k_refine_every == 0) &&
               ((_iter % k_reset_every) >= pause_refine_after_reset)) {
+            std::cout << "\nRefine GS at iter: " << _iter << ": ";
             grow_gs(_iter, _p_optimizer);
 
             // prune
             prune_gs(_iter, _p_optimizer);
             zero_state();
+            std::cout << "\n";
           }
         }
         if (_iter % k_reset_every == 0) {
+          std::cout << "\nReset opacity at iter: " << _iter << "\n";
           reset_opacity(_p_optimizer);
         }
       }
@@ -646,12 +649,17 @@ void NeuralGS::update_state(std::map<std::string, torch::Tensor> &info) {
 
   state["grad2d"].index_add_(0, gs_ids, grads.norm(2, -1));
 
-  state["count"].index_add_(0, gs_ids,
-                            torch::ones_like(gs_ids, torch::kFloat32));
   // put max visibilities into vis
-  state["vis"].index_put_({gs_ids},
-                          torch::maximum(state["vis"].index_select(0, gs_ids),
-                                         info["visibilities"].squeeze()));
+  auto gs_vis = info["visibilities"].squeeze();
+  state["vis"].index_put_(
+      {gs_ids}, torch::maximum(state["vis"].index_select(0, gs_ids), gs_vis));
+
+  auto vis_gs_idx =
+      gs_ids.index_select(0, (gs_vis > 1e-4f).nonzero().squeeze());
+  std::cout << "Visible GSs: " << vis_gs_idx.size(0) << "/" << gs_ids.size(0)
+            << "; ";
+  state["count"].index_add_(0, vis_gs_idx,
+                            torch::ones_like(vis_gs_idx, torch::kFloat32));
 
   if (k_refine_scale2d_stop_iter > 0) {
     state["radii"].index_put_(
@@ -703,9 +711,8 @@ int NeuralGS::duplicate(const std::shared_ptr<torch::optim::Adam> &_p_optimizer,
                         const torch::Tensor &is_dupli) {
   auto n_dupli = is_dupli.sum().item<int>();
   if (n_dupli > 0) {
-    if (k_debug) {
-      cout << "\nDuplicate " << n_dupli << " gaussians\n";
-    }
+    cout << "Duplicate " << n_dupli << "; ";
+
     auto dupli_idx = is_dupli.nonzero().squeeze();
 
     auto dupli_anchors = anchors_.index_select(0, dupli_idx);
@@ -744,9 +751,8 @@ int NeuralGS::split(const std::shared_ptr<torch::optim::Adam> &_p_optimizer,
                     const torch::Tensor &is_split) {
   auto n_split = is_split.sum().item<int>();
   if (n_split > 0) {
-    if (k_debug) {
-      cout << "\nSplit " << n_split << " gaussians\n";
-    }
+    cout << "Split " << n_split << "; ";
+
     auto sel_idx = is_split.nonzero().squeeze();
     auto rest_idx = (~is_split).nonzero().squeeze();
 
@@ -843,8 +849,8 @@ void NeuralGS::prune_gs(const int &iter,
   auto opacity = get_opacity();
   auto is_prune = opacity < k_prune_opa;
   auto n_prune_opa = is_prune.sum().item<int>();
-  if ((n_prune_opa > 0) && k_debug) {
-    cout << "\nPrune " << n_prune_opa << " low opa gaussians\n";
+  if (n_prune_opa > 0) {
+    cout << "Prune " << n_prune_opa << " low opa; ";
   }
   auto scale = get_scale();
   scale = scale.slice(-1, 0, 2);
@@ -853,9 +859,7 @@ void NeuralGS::prune_gs(const int &iter,
   auto n_prune_small = is_too_small.sum().item<int>();
   if (n_prune_small > 0) {
     is_prune |= is_too_small;
-    if (k_debug) {
-      cout << "\nPrune " << n_prune_small << " small gaussians\n";
-    }
+    cout << "Prune " << n_prune_small << " small; ";
   }
 
   if (!prune_opa_only) {
@@ -867,7 +871,7 @@ void NeuralGS::prune_gs(const int &iter,
       int n_prune_big = is_too_big.sum().item<int>();
       if (n_prune_big > 0) {
         is_prune |= is_too_big;
-        std::cout << "\nPrune " << n_prune_big << " too big splats\n";
+        std::cout << "Prune " << n_prune_big << " too big splats; ";
       }
     }
   }
@@ -883,8 +887,8 @@ void NeuralGS::prune_invisible_gs(
     state["vis"].zero_();
 
     int n_prune = prune_gs(_p_optimizer, is_prune);
-    if ((n_prune > 0) && k_debug) {
-      cout << "\nPrune " << n_prune << " invisible gaussians\n";
+    if (n_prune > 0) {
+      cout << "Prune " << n_prune << " invisible; ";
     }
   }
 }
@@ -895,14 +899,13 @@ void NeuralGS::prune_nan_gs(
                   quaternion_.isnan().any(-1);
 
   int n_prune = prune_gs(_p_optimizer, is_prune);
-  if ((n_prune > 0) && k_debug) {
-    cout << "\nPrune " << n_prune << " nan gaussians\n";
+  if (n_prune > 0) {
+    cout << "Prune " << n_prune << " nan; ";
   }
 }
 
 void NeuralGS::reset_opacity(
     const std::shared_ptr<torch::optim::Adam> &_p_optimizer) {
-  std::cout << "\nReset opacity\n";
   // opacity activation
   auto opacity = get_opacity();
   auto reset_opacities = inverse_sigmoid(
