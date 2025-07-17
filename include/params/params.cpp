@@ -79,7 +79,6 @@ bool k_llff;
 bool k_cull_mesh;
 
 // 3DGS params
-int k_edge_gs;
 bool k_gs_sdf_reg;
 bool k_geo_init, k_sky_init;
 bool k_color_init;
@@ -409,7 +408,6 @@ void read_base_params(const std::filesystem::path &_base_config_path,
   fsSettings["export_train_pcl"] >> k_export_train_pcl;
   fsSettings["export_mesh"] >> k_export_mesh;
   fsSettings["test_idx"] >> k_test_idx;
-  fsSettings["edge_gs"] >> k_edge_gs;
   fsSettings["geo_init"] >> k_geo_init;
   fsSettings["color_init"] >> k_color_init;
   fsSettings["sky_init"] >> k_sky_init;

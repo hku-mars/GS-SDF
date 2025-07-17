@@ -31,8 +31,6 @@ eikonal_weight: 1e-1 # it will greatly affect structure
 curvate_weight: 0.0 #5e-4 # should be the same loss level to eikonal loss
 align_weight: 0.1 # adjust smoothness (higher smoother)
 
-edge_gs: 1 # marching cube init. work for general cases; disable when initializing too many gs to OOM
-
 # 2DGS params
 rgb_weight: 0.8
 dssim_weight: 0.2
