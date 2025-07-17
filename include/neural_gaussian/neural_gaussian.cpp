@@ -267,11 +267,6 @@ rasterization_2dgs_sdf(
   return std::make_tuple(render_colors, render_alphas, meta);
 }
 
-torch::Tensor inverse_sigmoid(torch::Tensor input) {
-  // Inverse sigmoid function
-  return torch::log(input / (1 - input));
-}
-
 NeuralGS::NeuralGS(const LocalMap::Ptr &_local_map_ptr,
                    const torch::Tensor &_points, const int &_num_train_data,
                    const float &_spatial_scale, const bool &_sdf_enable)
@@ -322,7 +317,7 @@ NeuralGS::NeuralGS(const LocalMap::Ptr &_local_map_ptr,
   } else {
     quaternion_ = random_quat_tensor(num_points).to(device);
     // [N, K, 1]
-    opacity_ = inverse_sigmoid(0.1f * torch::ones({num_points}, device));
+    opacity_ = torch::logit(0.1f * torch::ones({num_points}, device));
   }
 
   // sky initialization: uniformly generate Gaussian on a sphere
@@ -380,7 +375,7 @@ NeuralGS::NeuralGS(const LocalMap::Ptr &_local_map_ptr,
     // tackle angle = 0 leads to nan
     sky_quat = sky_quat.nan_to_num();
     auto sky_opacity =
-        inverse_sigmoid(1.0f * torch::ones({num_sky_points}, device));
+        torch::logit(1.0f * torch::ones({num_sky_points}, device));
 
     // Concatenate with existing gaussians
     anchors_ = torch::cat({anchors_, sky_anchor}, 0);
@@ -656,8 +651,8 @@ void NeuralGS::update_state(std::map<std::string, torch::Tensor> &info) {
 
   auto vis_gs_idx =
       gs_ids.index_select(0, (gs_vis > 1e-4f).nonzero().squeeze());
-  std::cout << "Visible GSs: " << vis_gs_idx.size(0) << "/" << gs_ids.size(0)
-            << "; ";
+  // std::cout << "Visible GS: " << vis_gs_idx.size(0) << "/" << gs_ids.size(0)
+  //           << "; ";
   state["count"].index_add_(0, vis_gs_idx,
                             torch::ones_like(vis_gs_idx, torch::kFloat32));
 
@@ -888,7 +883,7 @@ void NeuralGS::prune_invisible_gs(
 
     int n_prune = prune_gs(_p_optimizer, is_prune);
     if (n_prune > 0) {
-      cout << "Prune " << n_prune << " invisible; ";
+      cout << "\nPrune " << n_prune << " invisible; ";
     }
   }
 }
@@ -907,9 +902,8 @@ void NeuralGS::prune_nan_gs(
 void NeuralGS::reset_opacity(
     const std::shared_ptr<torch::optim::Adam> &_p_optimizer) {
   // opacity activation
-  auto opacity = get_opacity();
-  auto reset_opacities = inverse_sigmoid(
-      torch::min(opacity, torch::ones_like(opacity) * k_prune_opa * 2.0f));
+  auto reset_opacities = opacity_.clamp_max(
+      torch::logit(torch::tensor(k_prune_opa * 2.0f, opacity_.device())));
 
   replace_tensors_to_optimizer(_p_optimizer.get(), opacity_, reset_opacities,
                                gs_param_start_idx + 3);
