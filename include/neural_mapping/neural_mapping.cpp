@@ -991,7 +991,13 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
       // gt color
       auto gt_file = data_loader_ptr->dataparser_ptr_->get_file(
           task.index, task.image_type);
-      auto gt_file_name = gt_file.filename();
+      auto gt_file_name =
+          std::filesystem::relative(
+              gt_file, data_loader_ptr->dataparser_ptr_->color_path_)
+              .string();
+      // replace '/' or '\' in gt_file_name with '_'
+      std::replace(gt_file_name.begin(), gt_file_name.end(), '/', '_');
+      std::replace(gt_file_name.begin(), gt_file_name.end(), '\\', '_');
       auto gt_color_path = task.base_dir / "color/gt" / gt_file_name;
       if (data_loader_ptr->dataparser_ptr_->sensor_.camera.scale != 1.0f) {
         auto gt = data_loader_ptr->dataparser_ptr_->get_image_cv_mat(
