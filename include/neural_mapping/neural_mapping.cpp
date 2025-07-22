@@ -1287,7 +1287,7 @@ void NeuralSLAM::export_checkpoint() {
 
     if (neural_gs_ptr) {
       auto gs_ply_save_path = k_model_path / "gs.ply";
-      neural_gs_ptr->export_gs_to_ply(gs_ply_save_path);
+      neural_gs_ptr->export_gs_to_ply(gs_ply_save_path, k_export_as_3dgs);
     }
   }
 }

@@ -74,7 +74,7 @@ int k_vis_batch_pt_num, k_batch_ray_num;
 float k_vis_res, k_export_res;
 int k_fps;
 
-int k_export_colmap_format, k_export_train_pcl, k_export_mesh;
+int k_export_colmap_format, k_export_train_pcl, k_export_mesh, k_export_as_3dgs;
 bool k_llff;
 bool k_cull_mesh;
 
@@ -407,6 +407,7 @@ void read_base_params(const std::filesystem::path &_base_config_path,
   fsSettings["export_colmap_format"] >> k_export_colmap_format;
   fsSettings["export_train_pcl"] >> k_export_train_pcl;
   fsSettings["export_mesh"] >> k_export_mesh;
+  fsSettings["export_as_3dgs"] >> k_export_as_3dgs;
   fsSettings["test_idx"] >> k_test_idx;
   fsSettings["geo_init"] >> k_geo_init;
   fsSettings["color_init"] >> k_color_init;
@@ -446,7 +447,7 @@ void write_pt_params() {
   auto pt_config_file = k_output_path / "model/config/scene/pt.yaml";
   std::ofstream ofs(pt_config_file);
   ofs << "%YAML:1.0\n";
-  cv::Mat cv_map_origin(1, 3, CV_32FC1, k_map_origin.data_ptr());
+  cv::Mat cv_map_origin(1, 3, CV_32FC1, k_map_origin.cpu().data_ptr());
   ofs << "map_origin: !!opencv-matrix\n   rows: 1\n   cols: 3\n   dt: f\n"
          "   data: "
       << cv_map_origin << '\n';

@@ -66,7 +66,8 @@ extern int k_vis_batch_pt_num, k_batch_ray_num;
 extern float k_vis_res, k_export_res;
 extern int k_fps;
 
-extern int k_export_colmap_format, k_export_train_pcl, k_export_mesh;
+extern int k_export_colmap_format, k_export_train_pcl, k_export_mesh,
+    k_export_as_3dgs;
 extern bool k_llff;
 extern bool k_cull_mesh;
 

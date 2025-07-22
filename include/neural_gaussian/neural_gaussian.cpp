@@ -911,7 +911,8 @@ void NeuralGS::reset_opacity(
                                gs_param_start_idx + 3);
 }
 
-void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path) {
+void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path,
+                                const bool &export_as_3dgs) {
   std::lock_guard<std::mutex> guard(render_mutex_);
 
   // Make sure input tensor is on CPU
@@ -982,6 +983,13 @@ void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path) {
   torch::Tensor scale;
   if (scaling_.numel() > 0) {
     scale = scaling_.detach().cpu().contiguous();
+    if (export_as_3dgs) {
+      scale = torch::cat({scale.slice(-1, 0, 2),
+                          torch::full({scale.size(0), 1}, log(1e-6f),
+                                      scale.options())},
+                         -1)
+                  .contiguous();
+    }
     export_ply.add_properties_to_element(
         "vertex", {"scale_0", "scale_1", "scale_2"},
         ply_utils::torch_type_to_ply_type(scale.scalar_type()), scale.size(0),
