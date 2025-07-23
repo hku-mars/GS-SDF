@@ -932,7 +932,7 @@ void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path,
 
   torch::Tensor f_dc;
   if (features_dc_.numel() > 0) {
-    f_dc = features_dc_.detach().cpu().contiguous();
+    f_dc = features_dc_.detach().transpose(1, 2).flatten(1).cpu().contiguous();
     auto dim_dc = f_dc.size(-1);
     std::vector<std::string> propertyKeys;
     propertyKeys.reserve(dim_dc);
@@ -952,7 +952,8 @@ void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path,
   if (k_sh_degree > 0) {
     if (features_rest_.numel() > 0) {
       // cant move f_rest into if
-      f_rest = features_rest_.detach().cpu().contiguous();
+      f_rest =
+          features_rest_.detach().transpose(1, 2).flatten(1).cpu().contiguous();
       auto dim_sh = num_sh_bases(k_sh_degree);
       std::vector<std::string> propertyKeys;
       propertyKeys.reserve((dim_sh - 1) * 3);
@@ -1122,10 +1123,11 @@ void NeuralGS::load_ply_to_gs(const std::filesystem::path &input_path) {
 
   if (f_dc->t == tinyply::Type::FLOAT32) {
     features_dc_ =
-        torch::from_blob(f_dc->buffer.get(), {(long)f_dc->count, 1, dim_dc},
+        torch::from_blob(f_dc->buffer.get(), {(long)f_dc->count, dim_dc, 1},
                          torch::kFloat32)
             .clone()
             .to(k_device)
+            .transpose(1, 2)
             .contiguous();
   }
 
@@ -1133,10 +1135,11 @@ void NeuralGS::load_ply_to_gs(const std::filesystem::path &input_path) {
     if (f_rest->t == tinyply::Type::FLOAT32) {
       auto dim_sh = num_sh_bases(k_sh_degree);
       features_rest_ = torch::from_blob(f_rest->buffer.get(),
-                                        {(long)f_rest->count, dim_sh - 1, 3},
+                                        {(long)f_rest->count, 3, dim_sh - 1},
                                         torch::kFloat32)
                            .clone()
                            .to(k_device)
+                           .transpose(1, 2)
                            .contiguous();
     }
   } else {
