@@ -277,8 +277,6 @@ NeuralGS::NeuralGS(const LocalMap::Ptr &_local_map_ptr,
 
   // avoid too large pos lr degenerate the training
   spatial_scale_ = std::min(original_spatial_scale_, 2.f);
-  k_grow_scale3d =
-      std::min(k_grow_scale3d * original_spatial_scale_, 0.25f * k_leaf_size);
 
   key_for_gradient = "gradient_2dgs";
 
@@ -682,7 +680,7 @@ void NeuralGS::grow_gs(
 
   auto scale = get_scale();
   scale = scale.slice(-1, 0, 2);
-  auto is_small = get<0>(scale.max(-1)) <= k_grow_scale3d;
+  auto is_small = get<0>(scale.max(-1)) <= k_grow_scale3d * spatial_scale_;
   auto is_dupli = is_grad_high & is_small;
 
   auto is_large = ~is_small;

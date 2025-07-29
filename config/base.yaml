@@ -61,7 +61,7 @@ vis_attribute: 0 # 0: disable to save storage; 1: normal;
 # strategy config
 prune_opa: 0.05 #0.1 # 0.1 // 0.005 for higher quality from 3DGS
 grow_grad2d: 0.0002 #0.005 # 0.0008 # 0.0002
-grow_scale3d: 0.01
+grow_scale3d: 0.01 # increase this to avoid over-splitting in large scenes
 grow_scale2d: 0.05
 prune_scale3d: 0.1
 prune_scale2d: 0.02
