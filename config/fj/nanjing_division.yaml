@@ -3,10 +3,13 @@
 
 base_config: "../base.yaml"
 
-sdf_iter_step: 10000
-sdf_end_step: 150000
+sdf_iter_step: 5000
+gs_iter_step: 60000
 
-preload: 0 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+leaf_sizes: 0.4
+bce_sigma: 1.0 # if get floaters, increase this value
+
+preload: 1 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
 llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
 
 sh_degree: 3
@@ -23,19 +26,25 @@ max_time_diff_lidar_and_pose: 0.01
 #   KITTI = 3,
 #   FastLivo = 4,
 #   Oxford Spires = 5,
-dataset_type: 5
+#   FJ = 6,
+dataset_type: 6
+color_path: "colmap/images"
+color_pose_path: "colmap/postrior_lidar/images.txt"
+color_pose_type: 4
+color_pose_w2c: 1
+depth_path: "depths"
+depth_pose_path: "depths/lidar_pose.txt"
+depth_pose_type: 5
+# DepthType { Image = 0, PLY = 1, BIN = 2, PCD = 3 }
+depth_type: 3
 
 frame_rate: 10
-min_range: 0.01
+min_range: 1
 max_range: 100
-ds_pt_num: 10000 # downsampled point number
+ds_pt_num: 4000 # downsampled point number
 max_pt_num: 5000000
 
-# scene config
-leaf_sizes: 0.4
-bce_sigma: 1e-1 # if get floaters, increase this value
-
-outlier_remove: 0 # unnecessary for static scenes
+outlier_remove: 1 # unnecessary for static scenes
 outlier_dist: 0.05
 outlier_removal_interval: 4000
 
@@ -45,20 +54,15 @@ export_resolution: 0.05
 fps: 10
 
 camera:
-   model: 1 # 0: pinhole; 1: equidistant
-   width: 1440
-   height: 1080
+   model: 0 # 0: pinhole; 1: equidistant
+   width: 1012
+   height: 760
+   scale: 0.5
 
-   fx: 698.3946772032825
-   fy: 698.4629665854908
-   cx: 718.431814292891
-   cy: 559.7771701003702
-
-   d0: -0.04707469981321094
-   d1: 0.011515146787673071
-   d2: -0.008908394423298474
-   d3: 0.0018561099343051583
-   d4: 0.0
+   fx: 306.25
+   fy: 306.25
+   cx: 506
+   cy: 380
 
 extrinsic:
    # lidar to camera

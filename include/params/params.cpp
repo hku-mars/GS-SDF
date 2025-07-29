@@ -237,12 +237,6 @@ void read_params(const std::filesystem::path &_config_path,
     k_sensor.T_B_C = k_sensor.T_B_L.matmul(k_sensor.T_C_L.inverse());
   }
   if (!fsSettings["map"].isNone()) {
-    cv::Mat cv_map_origin;
-    fsSettings["map"]["map_origin"] >> cv_map_origin;
-    cv_map_origin.convertTo(cv_map_origin, CV_32FC1);
-    k_map_origin =
-        torch::from_blob(cv_map_origin.data, {3}, torch::kFloat32).clone();
-
     fsSettings["map"]["map_size"] >> k_inner_map_size;
     k_x_max = 0.5f * k_inner_map_size;
     k_y_max = k_x_max;

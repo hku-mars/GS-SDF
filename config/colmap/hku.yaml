@@ -59,10 +59,4 @@ camera:
    cy: 533.971978652
 
 map:
-   map_origin: !!opencv-matrix
-      rows: 1
-      cols: 3
-      dt: d
-      data: [ 34, 318, 20 ]
-   
    map_size: 300

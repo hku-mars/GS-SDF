@@ -47,11 +47,5 @@ extrinsic:
               0.0, 0.0, 1.0, -0.0284,
               0.0, 0.0, 0.0, 1.0 ]
 
-map:
-   map_origin: !!opencv-matrix
-      rows: 1
-      cols: 3
-      dt: d
-      data: [ 5, 20, 20 ]
-   
+map:   
    map_size: 110

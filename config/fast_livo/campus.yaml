@@ -48,10 +48,4 @@ extrinsic:
               0.0, 0.0, 0.0, 1.0 ]
 
 map:
-   map_origin: !!opencv-matrix
-      rows: 1
-      cols: 3
-      dt: d
-      data: [ 20, 0, 20 ]
-   
    map_size: 50

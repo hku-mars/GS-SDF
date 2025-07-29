@@ -22,11 +22,6 @@ sh_degree: 0
 bck_color: 0 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
 
 map:
-   map_origin: !!opencv-matrix
-      rows: 1
-      cols: 3
-      dt: d
-      data: [ 0, 0, 0 ]
    map_size: 14
 
 min_range: 0.01

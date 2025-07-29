@@ -651,8 +651,7 @@ void NeuralGS::update_state(std::map<std::string, torch::Tensor> &info) {
   state["vis"].index_put_(
       {gs_ids}, torch::maximum(state["vis"].index_select(0, gs_ids), gs_vis));
 
-  auto vis_gs_idx =
-      gs_ids.index_select(0, (gs_vis > 1e-4f).nonzero().squeeze());
+  auto vis_gs_idx = gs_ids.index_select(0, (gs_vis > 0.f).nonzero().squeeze());
   // std::cout << "Visible GS: " << vis_gs_idx.size(0) << "/" << gs_ids.size(0)
   //           << "; ";
   state["count"].index_add_(0, vis_gs_idx,
