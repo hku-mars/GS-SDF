@@ -993,7 +993,9 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
           task.index, task.image_type);
       auto gt_file_name =
           std::filesystem::relative(
-              gt_file, data_loader_ptr->dataparser_ptr_->color_path_)
+              gt_file, task.image_type == dataparser::DataType::EvalColor
+                           ? data_loader_ptr->dataparser_ptr_->eval_color_path_
+                           : data_loader_ptr->dataparser_ptr_->color_path_)
               .string();
       // replace '/' or '\' in gt_file_name with '_'
       std::replace(gt_file_name.begin(), gt_file_name.end(), '/', '_');
@@ -1287,7 +1289,7 @@ void NeuralSLAM::export_checkpoint() {
 
     if (neural_gs_ptr) {
       auto gs_ply_save_path = k_model_path / "gs.ply";
-      neural_gs_ptr->export_gs_to_ply(gs_ply_save_path, k_export_as_3dgs);
+      neural_gs_ptr->export_gs_to_ply(gs_ply_save_path);
     }
   }
 }

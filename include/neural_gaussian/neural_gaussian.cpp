@@ -558,9 +558,13 @@ void NeuralGS::train_callback(
   auto refine_stop_iter = _total_iter / 2;
   if (!info.empty()) {
     llog::RecordValue("gs_num", anchors_.size(0), false);
-    update_state(info);
-    prune_nan_gs(_iter, _p_optimizer);
-    prune_invisible_gs(_iter, _p_optimizer);
+    if (_iter >= refine_stop_iter) {
+      return;
+    } else {
+      update_state(info);
+      prune_nan_gs(_iter, _p_optimizer);
+      prune_invisible_gs(_iter, _p_optimizer);
+    }
 
     // # Every 1000 its we increase the levels of SH up to a maximum degree
     sh_degree_to_use_ = min(k_sh_degree, _iter / k_sh_degree_interval);
@@ -649,11 +653,8 @@ void NeuralGS::update_state(std::map<std::string, torch::Tensor> &info) {
   state["vis"].index_put_(
       {gs_ids}, torch::maximum(state["vis"].index_select(0, gs_ids), gs_vis));
 
-  auto vis_gs_idx = gs_ids.index_select(0, (gs_vis > 0.f).nonzero().squeeze());
-  // std::cout << "Visible GS: " << vis_gs_idx.size(0) << "/" << gs_ids.size(0)
-  //           << "; ";
-  state["count"].index_add_(0, vis_gs_idx,
-                            torch::ones_like(vis_gs_idx, torch::kFloat32));
+  state["count"].index_add_(0, gs_ids,
+                            torch::ones_like(gs_ids, torch::kFloat32));
 
   if (k_refine_scale2d_stop_iter > 0) {
     state["radii"].index_put_(
@@ -908,8 +909,7 @@ void NeuralGS::reset_opacity(
                                gs_param_start_idx + 3);
 }
 
-void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path,
-                                const bool &export_as_3dgs) {
+void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path) {
   std::lock_guard<std::mutex> guard(render_mutex_);
 
   // Make sure input tensor is on CPU
@@ -981,13 +981,13 @@ void NeuralGS::export_gs_to_ply(std::filesystem::path &output_path,
   torch::Tensor scale;
   if (scaling_.numel() > 0) {
     scale = scaling_.detach().cpu().contiguous();
-    if (export_as_3dgs) {
-      scale = torch::cat({scale.slice(-1, 0, 2),
-                          torch::full({scale.size(0), 1}, log(1e-6f),
-                                      scale.options())},
-                         -1)
-                  .contiguous();
-    }
+    // make it compatible with 3DGS
+    scale = torch::cat(
+                {scale.slice(-1, 0, 2),
+                 torch::full({scale.size(0), 1}, log(1e-6f), scale.options())},
+                -1)
+                .contiguous();
+
     export_ply.add_properties_to_element(
         "vertex", {"scale_0", "scale_1", "scale_2"},
         ply_utils::torch_type_to_ply_type(scale.scalar_type()), scale.size(0),

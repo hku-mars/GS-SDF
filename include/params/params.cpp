@@ -74,7 +74,7 @@ int k_vis_batch_pt_num, k_batch_ray_num;
 float k_vis_res, k_export_res;
 int k_fps;
 
-int k_export_colmap_format, k_export_train_pcl, k_export_mesh, k_export_as_3dgs;
+int k_export_colmap_format, k_export_train_pcl, k_export_mesh;
 bool k_llff;
 bool k_cull_mesh;
 
@@ -401,7 +401,6 @@ void read_base_params(const std::filesystem::path &_base_config_path,
   fsSettings["export_colmap_format"] >> k_export_colmap_format;
   fsSettings["export_train_pcl"] >> k_export_train_pcl;
   fsSettings["export_mesh"] >> k_export_mesh;
-  fsSettings["export_as_3dgs"] >> k_export_as_3dgs;
   fsSettings["test_idx"] >> k_test_idx;
   fsSettings["geo_init"] >> k_geo_init;
   fsSettings["color_init"] >> k_color_init;

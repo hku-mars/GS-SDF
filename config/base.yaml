@@ -41,9 +41,9 @@ near: 0.05
 far: 300
 depth_type: 0 # 0: mean depth (unbounded scene); 1: median depth (bounded scene) 
 render_normal_weight: 0.01 # if you got not algined depth and color, please turn on render regularization
-isotropic_weight: 0.05 # isotropic regularization, only for 2DGS
+isotropic_weight: 0.05 # isotropic regularization, less micro point, only for 2DGS
 gs_sdf_weight: 5e-3 # equal to 3d sdf normal; need to space to blending layer element, so not too large
-detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process
+detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process; otherwise it might degenerate the results
 refine_gs_struct_start_iter: 0 #7000 #2000 #7000
 visible_thr: 1e-1 # raise to improve efficiency
 
@@ -54,14 +54,13 @@ export_interval: 999 # every export_interval frames, the mesh will be exported
 export_colmap_format: 0 # 0: disable; 1: for 3dgs (txt); 2: for nerfstudio colmap; 3: for 3dgs (bin)
 export_train_pcl: 0 # 0: disable; 1: enable
 export_mesh: 1
-export_as_3dgs: 0 # enable to export as 3DGS format, which is compatible with 3DGS viewer
 test_idx: 3 # export test img id
 vis_attribute: 0 # 0: disable to save storage; 1: normal;
 
 # strategy config
 prune_opa: 0.05 #0.1 # 0.1 // 0.005 for higher quality from 3DGS
-grow_grad2d: 0.0002 #0.005 # 0.0008 # 0.0002
-grow_scale3d: 0.01 # increase this to avoid over-splitting in large scenes
+grow_grad2d: 0.0002 # control the growth rate (bigger slower), in case too many gs
+grow_scale3d: 0.01 # 0.05 # increase this to avoid over-splitting in large scenes
 grow_scale2d: 0.05
 prune_scale3d: 0.1
 prune_scale2d: 0.02

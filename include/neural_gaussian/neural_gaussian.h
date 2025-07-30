@@ -49,8 +49,7 @@ struct NeuralGS : torch::nn::Module {
                       const std::shared_ptr<torch::optim::Adam> &_p_optimizer,
                       std::map<std::string, torch::Tensor> &info);
 
-  void export_gs_to_ply(std::filesystem::path &output_path,
-                        const bool &export_as_3dgs = false);
+  void export_gs_to_ply(std::filesystem::path &output_path);
   void load_ply_to_gs(const std::filesystem::path &input_path);
 
   void freeze_structure();
