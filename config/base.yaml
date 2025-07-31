@@ -41,9 +41,9 @@ near: 0.05
 far: 300
 depth_type: 0 # 0: mean depth (unbounded scene); 1: median depth (bounded scene) 
 render_normal_weight: 0.01 # if you got not algined depth and color, please turn on render regularization
-isotropic_weight: 0.05 # isotropic regularization, less micro point, only for 2DGS
+isotropic_weight: 0.1 # isotropic regularization, less micro point, only for 2DGS
 gs_sdf_weight: 5e-3 # equal to 3d sdf normal; need to space to blending layer element, so not too large
-detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process; otherwise it might degenerate the results
+detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process; otherwise it might degenerate the results; and to reproduce paper results, set it to 1
 refine_gs_struct_start_iter: 0 #7000 #2000 #7000
 visible_thr: 1e-1 # raise to improve efficiency
 
