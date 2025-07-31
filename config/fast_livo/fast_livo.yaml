@@ -13,6 +13,7 @@ llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
 #   FastLivo = 4,
 dataset_type: 4
 sh_degree: 3
+bck_color: 1 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
 
 min_range: 0.01
 max_range: 100
