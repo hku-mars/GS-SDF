@@ -103,7 +103,7 @@ def main():
     parser.add_argument('--gt_dir', default='gt', help='Directory containing GT images')
     parser.add_argument('--renders_dir', default='renders', help='Directory containing rendered images')
     parser.add_argument('--output', default='comparison_video.mp4', help='Output video filename')
-    parser.add_argument('--fps', type=int, default=30, help='Video frame rate')
+    parser.add_argument('--fps', type=int, default=2, help='Video frame rate')
     parser.add_argument('--gap_width', type=int, default=5, help='Gap width between images in pixels')
     
     args = parser.parse_args()

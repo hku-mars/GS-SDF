@@ -1650,6 +1650,61 @@ bool NeuralSLAM::end() {
     render_path(false, k_fps);
     render_path(true, 2);
     eval_render();
+
+    // Create comparison video
+    auto log_filename = log_file_.filename().replace_extension();
+    auto log_path = k_output_path / log_filename;
+
+    // Create video for train data
+    auto train_gt_dir = log_path / "train/color/gt";
+    auto train_renders_dir = log_path / "train/color/renders";
+    auto train_video_output = log_path / "train/color/video.mp4";
+
+    if (std::filesystem::exists(train_gt_dir) &&
+        std::filesystem::exists(train_renders_dir)) {
+      auto train_video_cmd = "python3 " + k_package_path.string() +
+                             "/eval/create_comparison_video.py --gt_dir " +
+                             train_gt_dir.string() + " --renders_dir " +
+                             train_renders_dir.string() + " --output " +
+                             train_video_output.string();
+      std::cout << "\033[34mCreating train comparison video: "
+                << train_video_cmd << "\033[0m\n";
+      std::system(train_video_cmd.c_str());
+    }
+
+    // Create video for eval data if exists
+    auto eval_gt_dir = log_path / "eval/color/gt";
+    auto eval_renders_dir = log_path / "eval/color/renders";
+    auto eval_video_output = log_path / "eval/color/video.mp4";
+
+    if (std::filesystem::exists(eval_gt_dir) &&
+        std::filesystem::exists(eval_renders_dir)) {
+      auto eval_video_cmd = "python3 " + k_package_path.string() +
+                            "/eval/create_comparison_video.py --gt_dir " +
+                            eval_gt_dir.string() + " --renders_dir " +
+                            eval_renders_dir.string() + " --output " +
+                            eval_video_output.string();
+      std::cout << "\033[34mCreating eval comparison video: " << eval_video_cmd
+                << "\033[0m\n";
+      std::system(eval_video_cmd.c_str());
+    }
+
+    // Create video for test data if exists
+    auto test_gt_dir = log_path / "test/color/gt";
+    auto test_renders_dir = log_path / "test/color/renders";
+    auto test_video_output = log_path / "test/color/video.mp4";
+
+    if (std::filesystem::exists(test_gt_dir) &&
+        std::filesystem::exists(test_renders_dir)) {
+      auto test_video_cmd = "python3 " + k_package_path.string() +
+                            "/eval/create_comparison_video.py --gt_dir " +
+                            test_gt_dir.string() + " --renders_dir " +
+                            test_renders_dir.string() + " --output " +
+                            test_video_output.string();
+      std::cout << "\033[34mCreating test comparison video: " << test_video_cmd
+                << "\033[0m\n";
+      std::system(test_video_cmd.c_str());
+    }
   }
 
   return true;
