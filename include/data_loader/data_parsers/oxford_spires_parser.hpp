@@ -75,10 +75,9 @@ struct Spires : DataParser {
       std::ofstream color_pose_file(color_pose_path_);
       for (int i = 0; i < raw_color_filelists_.size(); i++) {
         auto color_image = get_image_cv_mat(i);
-        auto undistorted_img = sensor_.camera.undistort(color_image);
         auto undistorted_img_path =
             color_path_ / raw_color_filelists_[i].filename();
-        cv::imwrite(undistorted_img_path, undistorted_img);
+        cv::imwrite(undistorted_img_path, color_image);
 
         auto T_W_C = color_poses_[i];
         for (int i = 0; i < 4; i++) {

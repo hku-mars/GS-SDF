@@ -38,7 +38,8 @@ void load_file_list(const std::string &dir_path,
 
 struct DataConfig {
   std::filesystem::path color_path, color_pose_path, depth_path,
-      depth_pose_path;
+      depth_pose_path, camera_path;
+  std::string color_type = ".jpg"; // default color type
   DepthType depth_type;
   int color_pose_type, depth_pose_type;
   bool color_pose_w2c = false;
@@ -67,7 +68,8 @@ struct DataParser {
         };
 
   std::filesystem::path dataset_path_, dataset_name_;
-  std::filesystem::path color_pose_path_, calib_path_, color_path_, depth_path_;
+  std::filesystem::path color_pose_path_, calib_path_, color_path_, depth_path_,
+      camera_path_;
 
   std::filesystem::path eval_pose_path_, eval_color_path_, eval_depth_path_;
 
@@ -75,21 +77,27 @@ struct DataParser {
   torch::Tensor train_color_;     // [N, H, W, 3]
   DepthSamples train_depth_pack_; // [N]
   torch::Tensor depth_poses_, train_depth_poses_, color_poses_,
-      train_color_poses_;                             // [N, 3, 4]
+      train_color_poses_; // [N, 3, 4]
+
+  std::map<int, sensor::Cameras> cameras_; // [N]
+
   torch::Tensor time_stamps_;                         // [N]
   torch::Tensor eval_color_poses_, eval_depth_poses_; // [N, 4, 4]
   int dataset_system_type_;
   sensor::Sensors sensor_;
   bool preload_;
   float res_scale_;
+
+  std::string color_type_ = ".jpg";
   int depth_type_ = DepthType::Image; // 0: image; 1: ply; 2: bin; 3: pcd
   torch::Tensor
       T_B_S_; // [4, 4]; extrinsic param, transformation from sensor to body
   torch::Tensor T_S_B_;
 
   std::vector<std::filesystem::path> raw_color_filelists_, raw_depth_filelists_,
-      train_color_filelists_, train_depth_filelists_, eval_color_filelists_,
-      eval_depth_filelists_;
+      train_depth_filelists_, eval_color_filelists_, eval_depth_filelists_;
+  std::vector<int> color_camera_ids_, train_to_raw_map_ids_,
+      eval_to_raw_map_ids_;
 
   float color_scale_inv_ = 1.0f / 255.0f;
   float depth_scale_inv_ = 1e-3f;
@@ -124,7 +132,7 @@ struct DataParser {
       return raw_depth_filelists_.size();
     }
     case DataType::TrainColor: {
-      return train_color_filelists_.size();
+      return train_to_raw_map_ids_.size();
     }
     case DataType::TrainDepth: {
       return train_depth_filelists_.size();
@@ -203,8 +211,11 @@ struct DataParser {
     return true;
   }
 
+  virtual std::map<int, sensor::Cameras>
+  load_cameras(const std::string &camera_path);
+
   virtual std::tuple<torch::Tensor, torch::Tensor,
-                     std::vector<std::filesystem::path>>
+                     std::vector<std::filesystem::path>, std::vector<int>>
   load_poses(const std::string &pose_path, const bool &with_head,
              const int &pose_type = 0, bool skip_line = false,
              std::string filter_name = "", bool inverse = false);

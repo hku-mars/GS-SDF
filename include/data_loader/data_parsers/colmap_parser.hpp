@@ -26,7 +26,11 @@ struct Colmap : DataParser {
     dataset_name_ = dataset_path_.filename();
 
     auto config = read_params(_dataset_path, _config_path);
+
+    camera_path_ = config.camera_path;
+
     color_path_ = config.color_path;
+    color_type_ = config.color_type;
     color_pose_path_ = config.color_pose_path;
     depth_path_ = config.depth_path;
     depth_pose_path_ = config.depth_pose_path;
@@ -65,13 +69,23 @@ struct Colmap : DataParser {
       throw std::runtime_error("depth_path_ does not exist: " +
                                depth_path_.string());
     }
+
+    if (!camera_path_.empty()) {
+      cameras_ = load_cameras(camera_path_);
+      std::cout << "Loaded " << cameras_.size() << " cameras\n";
+    }
+
     auto color_info = load_poses(color_pose_path_, false, color_pose_type_,
                                  true, "", color_pose_w2c_);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
+    color_camera_ids_ = std::get<3>(color_info);
+    for (auto &file : raw_color_filelists_) {
+      file = color_path_ / file;
+    }
     std::cout << "Loaded " << color_poses_.size(0) << " color poses\n";
     TORCH_CHECK(color_poses_.size(0) > 0);
-    load_colors(".jpg", "", false, true);
+    load_colors(color_type_, "", false, true);
     std::cout << "Loaded " << raw_color_filelists_.size() << " color images\n";
     TORCH_CHECK(color_poses_.size(0) == raw_color_filelists_.size());
 
@@ -79,8 +93,12 @@ struct Colmap : DataParser {
       mask = get_color_image(mask_file_, 0) > 0;
     }
 
-    depth_poses_ =
-        std::get<0>(load_poses(depth_pose_path_, false, depth_pose_type_));
+    auto depth_info = load_poses(depth_pose_path_, false, depth_pose_type_);
+    depth_poses_ = std::get<0>(depth_info);
+    raw_depth_filelists_ = std::get<2>(depth_info);
+    for (auto &file : raw_depth_filelists_) {
+      file = depth_path_ / file;
+    }
     std::cout << "Loaded " << depth_poses_.size(0) << " depth poses\n";
     TORCH_CHECK(depth_poses_.size(0) > 0);
 

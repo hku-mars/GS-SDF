@@ -1,0 +1,70 @@
+%YAML:1.0
+
+base_config: "../base.yaml"
+
+sdf_iter_step: 5000
+gs_iter_step: 30000
+
+preload: 0 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
+
+
+# dataset_type
+#   Replica = 0,
+#   R3live = 1,
+#   NeuralRGBD = 2,
+#   KITTI = 3,
+#   FastLivo = 4,
+dataset_type: 6
+camera_path: "cameras.txt"
+color_path: "images"
+color_type: ".png"
+color_pose_path: "images.txt"
+color_pose_type: 4
+color_pose_w2c: 0
+depth_path: "depths"
+depth_pose_path: "depths.txt"
+depth_pose_type: 4
+depth_type: 3 # 0: image; 1: ply; 2: bin; 3: pcd
+
+sh_degree: 3
+bck_color: 1 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
+
+frame_rate: 10
+min_range: 0.1
+max_range: 100
+ds_pt_num: 60000 # downsampled point number
+max_pt_num: 1000000
+
+outlier_remove: 1 # unnecessary for static scenes
+outlier_dist: 0.05
+outlier_removal_interval: 2000
+
+# scene config
+leaf_sizes: 0.2
+bce_sigma: 1.0 # if get floaters, increase this value
+
+# visualization
+vis_resolution: 0.1 # better no more than leaf_sizes or will miss faces
+export_resolution: 0.04
+fps: 10
+
+camera:
+   model: 1 # 0: pinhole; 1: equidistant
+   width: 2448
+   height: 2048
+   scale: 0.25
+
+   fx: 1420.341348618206
+   fy: 1420.997567384703
+   cx: 1224.37438458383
+   cy: 1010.762813735306
+
+   d0: -0.00425799
+   d1: 0.00307152
+   d2: -0.0155525
+   d3: 0.00805682
+   d4: 0.0
+
+map:
+   map_size: 300

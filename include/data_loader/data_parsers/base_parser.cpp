@@ -19,6 +19,8 @@ DataConfig read_params(const std::filesystem::path &_dataset_path,
 
   DataConfig config;
   config.color_path = _dataset_path / std::string(fsSettings["color_path"]);
+  config.color_type = std::string(fsSettings["color_type"]);
+
   config.color_pose_path =
       _dataset_path / std::string(fsSettings["color_pose_path"]);
   config.depth_path = _dataset_path / std::string(fsSettings["depth_path"]);
@@ -30,6 +32,10 @@ DataConfig read_params(const std::filesystem::path &_dataset_path,
   fsSettings["color_pose_type"] >> config.color_pose_type;
   fsSettings["color_pose_w2c"] >> config.color_pose_w2c;
   fsSettings["depth_pose_type"] >> config.depth_pose_type;
+
+  if (!fsSettings["camera_path"].empty()) {
+    config.camera_path = _dataset_path / std::string(fsSettings["camera_path"]);
+  }
 
   return config;
 }
@@ -175,7 +181,7 @@ std::filesystem::path DataParser::get_file(const int &idx,
   case DataType::RawDepth:
     return raw_depth_filelists_[idx];
   case DataType::TrainColor:
-    return train_color_filelists_[idx];
+    return raw_color_filelists_[train_to_raw_map_ids_[idx]];
   case DataType::TrainDepth:
     return train_depth_filelists_[idx];
   case DataType::EvalColor:
@@ -192,7 +198,9 @@ cv::Mat DataParser::get_image_cv_mat(const int &idx,
   switch (image_type) {
   case DataType::RawColor: {
     if (idx < raw_color_filelists_.size()) {
-      return cv::imread(raw_color_filelists_[idx], cv::IMREAD_ANYCOLOR);
+      return cameras_.at(color_camera_ids_[idx])
+          .undistort(
+              cv::imread(raw_color_filelists_[idx], cv::IMREAD_ANYCOLOR));
     }
   }
   case DataType::RawDepth: {
@@ -205,8 +213,11 @@ cv::Mat DataParser::get_image_cv_mat(const int &idx,
     }
   }
   case DataType::TrainColor: {
-    if (idx < train_color_filelists_.size()) {
-      return cv::imread(train_color_filelists_[idx], cv::IMREAD_ANYCOLOR);
+    if (idx < train_to_raw_map_ids_.size()) {
+      auto raw_idx = train_to_raw_map_ids_[idx];
+      return cameras_.at(color_camera_ids_[raw_idx])
+          .undistort(
+              cv::imread(raw_color_filelists_[raw_idx], cv::IMREAD_ANYCOLOR));
     }
   }
   case DataType::TrainDepth: {
@@ -220,7 +231,9 @@ cv::Mat DataParser::get_image_cv_mat(const int &idx,
   }
   case DataType::EvalColor:
     if (idx < eval_color_filelists_.size()) {
-      return cv::imread(eval_color_filelists_[idx], cv::IMREAD_ANYCOLOR);
+      return cameras_.at(color_camera_ids_[idx])
+          .undistort(
+              cv::imread(eval_color_filelists_[idx], cv::IMREAD_ANYCOLOR));
     }
   case DataType::EvalDepth:
     if (idx < eval_depth_filelists_.size()) {
@@ -389,6 +402,75 @@ cv::Mat DataParser::get_image_cv_mat(const std::string &file_path,
   return cv::imread(file_path, imread_mode);
 }
 
+std::map<int, sensor::Cameras>
+DataParser::load_cameras(const std::string &camera_path) {
+  if (!std::filesystem::exists(camera_path)) {
+    throw std::runtime_error("Camera file does not exist: " + camera_path);
+  }
+  std::cout << "Loading cameras from: " << camera_path << "\n";
+  std::ifstream file(camera_path);
+  std::string line;
+  std::map<int, sensor::Cameras> cameras;
+
+  // colmap format: cam_id, model_type, width, height, params[]
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
+
+    if (line[0] == '#') {
+      continue;
+    }
+
+    int cam_id;
+    std::string model_type;
+    int width, height;
+    iss >> cam_id >> model_type >> width >> height;
+
+    sensor::Cameras camera;
+    camera.width = width;
+    camera.height = height;
+
+    if (model_type == "OPENCV") {
+      camera.model = 0; // Pinhole model
+      float fx, fy, cx, cy;
+      iss >> fx >> fy >> cx >> cy;
+      camera.fx = fx;
+      camera.fy = fy;
+      camera.cx = cx;
+      camera.cy = cy;
+    } else if (model_type == "OPENCV_FISHEYE") {
+      camera.model = 1; // OpenCV fisheye model
+      float fx, fy, cx, cy, k1, k2, k3, k4;
+      iss >> fx >> fy >> cx >> cy >> k1 >> k2 >> k3 >> k4;
+      camera.fx = fx;
+      camera.fy = fy;
+      camera.cx = cx;
+      camera.cy = cy;
+      camera.set_distortion(k1, k2, k3, k4);
+    } else {
+      throw std::runtime_error("Unsupported camera model: " + model_type);
+    }
+
+    auto scale = sensor_.camera.scale;
+    camera.width = scale * camera.width;
+    camera.height = scale * camera.height;
+    camera.fx = scale * camera.fx;
+    camera.fy = scale * camera.fy;
+    camera.cx = scale * camera.cx;
+    camera.cy = scale * camera.cy;
+
+    std::cout << "Camera ID: " << cam_id << "\n"
+              << "Width: " << camera.width << "\n"
+              << "Height: " << camera.height << "\n"
+              << "fx: " << camera.fx << "\n"
+              << "fy: " << camera.fy << "\n"
+              << "cx: " << camera.cx << "\n"
+              << "cy: " << camera.cy << "\n";
+
+    cameras[cam_id] = camera;
+  }
+  return cameras;
+}
+
 /*
   load_poses: load poses from file
   pose_path: path to pose file
@@ -400,17 +482,21 @@ cv::Mat DataParser::get_image_cv_mat(const std::string &file_path,
              4 for colmap format: IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ,
   CAMERA_ID, NAME // POINTS2D[] as (X, Y, POINT3D_ID)
  */
-std::tuple<torch::Tensor, torch::Tensor, std::vector<std::filesystem::path>>
+std::tuple<torch::Tensor, torch::Tensor, std::vector<std::filesystem::path>,
+           std::vector<int>>
 DataParser::load_poses(const std::string &pose_path, const bool &with_head,
                        const int &pose_type, bool skip_line,
                        std::string filter_name, bool inverse) {
   if (!std::filesystem::exists(pose_path)) {
     throw std::runtime_error("Pose file does not exist: " + pose_path);
   }
+  std::cout << "Loading poses from: " << pose_path << "\n";
+
   std::ifstream file(pose_path);
   std::string line;
   std::vector<torch::Tensor> poses;
   std::vector<std::filesystem::path> image_names;
+  std::vector<int> camera_ids;
   std::vector<double> time_stamps;
 
   if (pose_type == 0) {
@@ -561,14 +647,18 @@ DataParser::load_poses(const std::string &pose_path, const bool &with_head,
       poses.push_back(pose_tensor);
 
       if (filter_name == "") {
-        image_names.push_back(color_path_ / image_name);
+        image_names.push_back(image_name);
       } else {
-        image_names.push_back(color_path_ / image_name.filename());
+        image_names.push_back(image_name.filename());
       }
+
+      camera_ids.push_back(camera_id);
+
       // need new tensor for vector
       pose_tensor = torch::eye(4, torch::kFloat);
 
-      if (skip_line) {
+      // if (skip_line)
+      {
         std::getline(file, line); // skip keypoint pairs
       }
     }
@@ -662,7 +752,7 @@ DataParser::load_poses(const std::string &pose_path, const bool &with_head,
 
   // Concatenate the list of tensors into a single tensor
   return {torch::stack(poses), torch::tensor(time_stamps, torch::kDouble),
-          image_names};
+          image_names, camera_ids};
 }
 
 void DataParser::align_pose_sensor(
@@ -712,18 +802,18 @@ void DataParser::load_colors(const std::string &file_extension,
     }
 
     train_color_poses_ = torch::zeros({train_color_num, 3, 4});
-    train_color_filelists_.resize(train_color_num);
+    train_to_raw_map_ids_.resize(train_color_num);
 #pragma omp parallel for
     for (int i = 1; i <= raw_color_num; i++) {
       auto pose = get_pose(i - 1, DataType::RawColor).slice(0, 0, 3);
       if (llff) {
         if (i % 8 != 0) {
           train_color_poses_.index_put_({i - i / 8 - 1}, pose);
-          train_color_filelists_[i - i / 8 - 1] = raw_color_filelists_[i - 1];
+          train_to_raw_map_ids_[i - i / 8 - 1] = i - 1;
         }
       } else {
         train_color_poses_.index_put_({i - 1}, pose);
-        train_color_filelists_[i - 1] = raw_color_filelists_[i - 1];
+        train_to_raw_map_ids_[i - 1] = i - 1;
       }
     }
 
@@ -757,7 +847,9 @@ void DataParser::load_depths(const std::string &file_extension,
                              const bool &llff) {
   if (!eval) {
     assert(std::filesystem::exists(depth_path_));
-    load_file_list(depth_path_, raw_depth_filelists_, prefix, file_extension);
+    if (raw_depth_filelists_.size() == 0) {
+      load_file_list(depth_path_, raw_depth_filelists_, prefix, file_extension);
+    }
     align_pose_sensor(raw_depth_filelists_, depth_poses_,
                       max_time_diff_lidar_and_pose_);
     int raw_depth_num = raw_depth_filelists_.size();
@@ -928,9 +1020,9 @@ std::vector<at::Tensor> DataParser::get_points_dist_ndir_zdirn(const int &idx) {
 void DataParser::post_process(int skip_first_num) {
   if (skip_first_num > 0) {
     train_color_poses_ = train_color_poses_.slice(0, skip_first_num);
-    train_color_filelists_ = std::vector<std::filesystem::path>(
-        train_color_filelists_.begin() + skip_first_num,
-        train_color_filelists_.end());
+    train_to_raw_map_ids_ =
+        std::vector<int>(train_to_raw_map_ids_.begin() + skip_first_num,
+                         train_to_raw_map_ids_.end());
     if (preload_) {
       train_color_ = train_color_.slice(0, skip_first_num);
     }

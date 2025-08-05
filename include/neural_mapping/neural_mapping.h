@@ -109,6 +109,8 @@ public:
                   std::filesystem::path &render_depth_path,
                   std::filesystem::path &acc_path);
 
+  std::map<std::string, torch::Tensor> render_image(const int &img_idx,
+                                                    const int &pose_type);
   std::map<std::string, torch::Tensor>
   render_image(const torch::Tensor &_pose, const float &_scale = 1.0,
                const bool &training = true);

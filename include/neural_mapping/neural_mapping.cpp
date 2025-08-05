@@ -209,10 +209,6 @@ NeuralSLAM::gs_train_batch_iter(const int &iter, const bool &opt_struct) {
   auto img_idx = train_cameras_idx[iter % train_num];
 
   // [3, 4]
-  auto color_pose = data_loader_ptr->dataparser_ptr_
-                        ->get_pose(img_idx, dataparser::DataType::TrainColor)
-                        .squeeze(0)
-                        .to(k_device);
   auto gt_color = data_loader_ptr->dataparser_ptr_
                       ->get_image(img_idx, dataparser::DataType::TrainColor)
                       .squeeze(0)
@@ -222,11 +218,8 @@ NeuralSLAM::gs_train_batch_iter(const int &iter, const bool &opt_struct) {
 
   static auto p_t_render = llog::CreateTimer("   render");
   p_t_render->tic();
-  auto render_results = neural_gs_ptr->render(
-      color_pose, data_loader_ptr->dataparser_ptr_->sensor_.camera, true,
-      k_bck_color);
-
-  render_results["color_pose"] = color_pose;
+  auto render_results =
+      render_image(img_idx.item<int>(), dataparser::DataType::TrainColor);
   p_t_render->toc_sum();
 
   static auto p_t_loss = llog::CreateTimer("   loss");
@@ -255,8 +248,8 @@ NeuralSLAM::gs_train_batch_iter(const int &iter, const bool &opt_struct) {
         render_depth = render_results["render_median"][0];
       }
       auto depth_normal = sensor::depth_to_normal(
-          data_loader_ptr->dataparser_ptr_->sensor_.camera, color_pose,
-          render_depth);
+          data_loader_ptr->dataparser_ptr_->sensor_.camera,
+          render_results["color_pose"], render_depth);
 
       auto render_alpha = render_results["alpha"][0].detach();
       depth_normal = depth_normal * render_alpha;
@@ -602,7 +595,7 @@ void NeuralSLAM::sdf_train_callback(const int &_iter, const int &_total_iter,
 
 void NeuralSLAM::prefilter_data(const bool &export_img) {
   std::vector<int> valid_ids_vec;
-  std::vector<std::filesystem::path> filtered_train_color_filelists;
+  std::vector<int> filtered_train_to_raw_map_ids;
   int color_size =
       data_loader_ptr->dataparser_ptr_->size(dataparser::DataType::TrainColor);
 
@@ -611,9 +604,8 @@ void NeuralSLAM::prefilter_data(const bool &export_img) {
                        ->get_image(0, dataparser::DataType::TrainColor)
                        .to(k_device);
   valid_ids_vec.emplace_back(0);
-  filtered_train_color_filelists.emplace_back(
-      data_loader_ptr->dataparser_ptr_->get_file(
-          0, dataparser::DataType::TrainColor));
+  filtered_train_to_raw_map_ids.emplace_back(
+      data_loader_ptr->dataparser_ptr_->train_to_raw_map_ids_[0]);
 
   std::filesystem::path fileter_color_path = k_output_path / "filter";
   if (export_img) {
@@ -641,9 +633,8 @@ void NeuralSLAM::prefilter_data(const bool &export_img) {
                                    now_color.permute({2, 0, 1}).unsqueeze(0));
     if (metric < k_prefilter) {
       valid_ids_vec.emplace_back(i);
-      filtered_train_color_filelists.emplace_back(
-          data_loader_ptr->dataparser_ptr_->get_file(
-              i, dataparser::DataType::TrainColor));
+      filtered_train_to_raw_map_ids.emplace_back(
+          data_loader_ptr->dataparser_ptr_->train_to_raw_map_ids_[i]);
       pre_color = now_color;
 
       if (export_img) {
@@ -658,8 +649,8 @@ void NeuralSLAM::prefilter_data(const bool &export_img) {
     }
   }
 
-  data_loader_ptr->dataparser_ptr_->train_color_filelists_ =
-      filtered_train_color_filelists;
+  data_loader_ptr->dataparser_ptr_->train_to_raw_map_ids_ =
+      filtered_train_to_raw_map_ids;
 
   auto valid_ids = torch::tensor(valid_ids_vec);
   auto reshape_color_pose_sizes =
@@ -888,6 +879,22 @@ NeuralSLAM::render_image(const torch::Tensor &_pose, const float &_scale,
   return render_results;
 }
 
+std::map<std::string, torch::Tensor>
+NeuralSLAM::render_image(const int &img_idx, const int &pose_type) {
+  auto color_pose =
+      data_loader_ptr->dataparser_ptr_->get_pose(img_idx, pose_type)
+          .squeeze(0)
+          .to(k_device);
+  auto color_camera = data_loader_ptr->dataparser_ptr_->cameras_.at(
+      data_loader_ptr->dataparser_ptr_->color_camera_ids_[img_idx]);
+  std::map<std::string, torch::Tensor> render_results;
+  render_results =
+      neural_gs_ptr->render(color_pose, color_camera, false, k_bck_color);
+
+  render_results["color_pose"] = color_pose;
+  return render_results;
+}
+
 void NeuralSLAM::create_dir(const std::filesystem::path &base_path,
                             std::filesystem::path &color_path,
                             std::filesystem::path &depth_path,
@@ -1054,9 +1061,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
 
     // Render the image
     p_timer_render->tic();
-    auto pose = data_loader_ptr->dataparser_ptr_->get_pose(i, image_type)
-                    .slice(0, 0, 3);
-    auto render_results = render_image(pose, 1.0, false);
+    auto render_results = render_image(i, image_type);
     p_timer_render->toc_sum();
 
     // Skip processing if render failed or saving disabled
@@ -1189,10 +1194,7 @@ float NeuralSLAM::export_test_image(bool is_eval, int idx,
     idx = std::rand() % data_loader_ptr->dataparser_ptr_->size(0);
   }
 
-  auto pose = data_loader_ptr->dataparser_ptr_->get_pose(idx, image_type)
-                  .slice(0, 0, 3)
-                  .to(k_device);
-  auto render_results = render_image(pose, 1.0, false);
+  auto render_results = render_image(idx, image_type);
 
   float psnr = 0.0f;
   if (!render_results.empty()) {
@@ -1243,12 +1245,12 @@ float NeuralSLAM::export_test_image(bool is_eval, int idx,
         torch::Tensor depth2normal;
         if (k_depth_type == 0) {
           depth2normal = sensor::depth_to_normal(
-              data_loader_ptr->dataparser_ptr_->sensor_.camera, pose,
-              render_depth);
+              data_loader_ptr->dataparser_ptr_->sensor_.camera,
+              render_results["color_pose"], render_depth);
         } else {
           depth2normal = sensor::depth_to_normal(
-              data_loader_ptr->dataparser_ptr_->sensor_.camera, pose,
-              render_results["render_median"][0]);
+              data_loader_ptr->dataparser_ptr_->sensor_.camera,
+              render_results["color_pose"], render_results["render_median"][0]);
         }
         depth2normal = depth2normal * render_results["alpha"][0].detach();
         auto depth2normal_cv =
