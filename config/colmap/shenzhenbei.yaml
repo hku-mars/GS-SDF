@@ -19,7 +19,7 @@ dataset_type: 6
 camera_path: "cameras.txt"
 color_path: "images"
 color_type: ".png"
-color_pose_path: "images.txt"
+color_pose_path: "images_raw.txt"
 color_pose_type: 4
 color_pose_w2c: 0
 depth_path: "depths"
@@ -53,7 +53,7 @@ camera:
    model: 1 # 0: pinhole; 1: equidistant
    width: 2448
    height: 2048
-   scale: 0.25
+   scale: 1.0
 
    fx: 1420.341348618206
    fy: 1420.997567384703

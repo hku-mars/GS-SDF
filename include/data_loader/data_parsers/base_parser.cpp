@@ -127,9 +127,8 @@ torch::Tensor DataParser::get_pose(const torch::Tensor &idx,
   }
   case DataType::TrainColor: {
     auto raw_idx = train_to_raw_map_ids_[idx.item<int>()];
-    return color_poses_
-        .index_select(0, torch::tensor(raw_idx, color_poses_.device()))
-        .slice(1, 0, 3);
+    return color_poses_.index_select(
+        0, torch::tensor(raw_idx, color_poses_.device()));
   }
   case DataType::TrainDepth: {
     return train_depth_poses_.index_select(0,

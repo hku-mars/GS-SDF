@@ -875,9 +875,7 @@ NeuralSLAM::render_image(const torch::Tensor &_pose, const float &_scale,
 std::map<std::string, torch::Tensor>
 NeuralSLAM::render_image(const int &img_idx, const int &pose_type) {
   auto color_pose =
-      data_loader_ptr->dataparser_ptr_->get_pose(img_idx, pose_type)
-          .squeeze(0)
-          .to(k_device);
+      data_loader_ptr->get_pose(img_idx, pose_type).squeeze(0).to(k_device);
   auto color_camera =
       data_loader_ptr->dataparser_ptr_->get_camera(img_idx, pose_type);
   std::map<std::string, torch::Tensor> render_results;
