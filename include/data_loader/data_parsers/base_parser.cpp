@@ -82,6 +82,27 @@ void load_file_list(const std::string &dir_path,
   std::cout << "Load " << out_filelsits.size() << " data." << "\n";
 }
 
+sensor::Cameras DataParser::get_camera(const int &idx,
+                                       const int &pose_type) const {
+  /**
+   * @description: return pose matrix at idx with shape [N, 4, 4]
+   * @return {*}
+   */
+  int raw_idx = idx;
+  switch (pose_type) {
+  case DataType::RawColor: {
+    break;
+  }
+  case DataType::TrainColor: {
+    raw_idx = train_to_raw_map_ids_[idx];
+    break;
+  }
+  default:
+    throw std::runtime_error("Invalid pose type");
+  }
+  return cameras_.at(color_camera_ids_[raw_idx]);
+}
+
 torch::Tensor DataParser::get_pose(const int &idx, const int &pose_type) const {
   /**
    * @description: return pose matrix at idx with shape [4, 4]
@@ -105,8 +126,10 @@ torch::Tensor DataParser::get_pose(const torch::Tensor &idx,
     return depth_poses_.index_select(0, idx.to(depth_poses_.device()));
   }
   case DataType::TrainColor: {
-    return train_color_poses_.index_select(0,
-                                           idx.to(train_color_poses_.device()));
+    auto raw_idx = train_to_raw_map_ids_[idx.item<int>()];
+    return color_poses_
+        .index_select(0, torch::tensor(raw_idx, color_poses_.device()))
+        .slice(1, 0, 3);
   }
   case DataType::TrainDepth: {
     return train_depth_poses_.index_select(0,
@@ -801,18 +824,15 @@ void DataParser::load_colors(const std::string &file_extension,
       train_color_num = raw_color_num;
     }
 
-    train_color_poses_ = torch::zeros({train_color_num, 3, 4});
     train_to_raw_map_ids_.resize(train_color_num);
 #pragma omp parallel for
     for (int i = 1; i <= raw_color_num; i++) {
       auto pose = get_pose(i - 1, DataType::RawColor).slice(0, 0, 3);
       if (llff) {
         if (i % 8 != 0) {
-          train_color_poses_.index_put_({i - i / 8 - 1}, pose);
           train_to_raw_map_ids_[i - i / 8 - 1] = i - 1;
         }
       } else {
-        train_color_poses_.index_put_({i - 1}, pose);
         train_to_raw_map_ids_[i - 1] = i - 1;
       }
     }
@@ -1019,7 +1039,6 @@ std::vector<at::Tensor> DataParser::get_points_dist_ndir_zdirn(const int &idx) {
 
 void DataParser::post_process(int skip_first_num) {
   if (skip_first_num > 0) {
-    train_color_poses_ = train_color_poses_.slice(0, skip_first_num);
     train_to_raw_map_ids_ =
         std::vector<int>(train_to_raw_map_ids_.begin() + skip_first_num,
                          train_to_raw_map_ids_.end());

@@ -74,10 +74,9 @@ struct DataParser {
   std::filesystem::path eval_pose_path_, eval_color_path_, eval_depth_path_;
 
   torch::Device device_ = torch::kCPU;
-  torch::Tensor train_color_;     // [N, H, W, 3]
-  DepthSamples train_depth_pack_; // [N]
-  torch::Tensor depth_poses_, train_depth_poses_, color_poses_,
-      train_color_poses_; // [N, 3, 4]
+  torch::Tensor train_color_;                                   // [N, H, W, 3]
+  DepthSamples train_depth_pack_;                               // [N]
+  torch::Tensor depth_poses_, train_depth_poses_, color_poses_; // [N, 3, 4]
 
   std::map<int, sensor::Cameras> cameras_; // [N]
 
@@ -107,6 +106,8 @@ struct DataParser {
 
   torch::Tensor mask = torch::Tensor();
 
+  virtual sensor::Cameras get_camera(const int &idx,
+                                     const int &pose_type) const;
   virtual torch::Tensor get_pose(const int &idx, const int &pose_type) const;
 
   virtual torch::Tensor get_pose(const torch::Tensor &idx,

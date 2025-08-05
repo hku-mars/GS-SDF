@@ -653,13 +653,6 @@ void NeuralSLAM::prefilter_data(const bool &export_img) {
       filtered_train_to_raw_map_ids;
 
   auto valid_ids = torch::tensor(valid_ids_vec);
-  auto reshape_color_pose_sizes =
-      data_loader_ptr->dataparser_ptr_->train_color_poses_.sizes().vec();
-  reshape_color_pose_sizes[0] = -1;
-  data_loader_ptr->dataparser_ptr_->train_color_poses_ =
-      data_loader_ptr->dataparser_ptr_->train_color_poses_
-          .index_select(0, valid_ids)
-          .reshape(reshape_color_pose_sizes);
   if (k_preload) {
     auto reshape_color_sizes =
         data_loader_ptr->dataparser_ptr_->train_color_.sizes().vec();
@@ -885,8 +878,8 @@ NeuralSLAM::render_image(const int &img_idx, const int &pose_type) {
       data_loader_ptr->dataparser_ptr_->get_pose(img_idx, pose_type)
           .squeeze(0)
           .to(k_device);
-  auto color_camera = data_loader_ptr->dataparser_ptr_->cameras_.at(
-      data_loader_ptr->dataparser_ptr_->color_camera_ids_[img_idx]);
+  auto color_camera =
+      data_loader_ptr->dataparser_ptr_->get_camera(img_idx, pose_type);
   std::map<std::string, torch::Tensor> render_results;
   render_results =
       neural_gs_ptr->render(color_pose, color_camera, false, k_bck_color);
