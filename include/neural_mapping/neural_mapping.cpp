@@ -827,7 +827,7 @@ void NeuralSLAM::batch_train() {
     auto train_color_num = data_loader_ptr->dataparser_ptr_->size(
         dataparser::DataType::TrainColor);
     int sample_step =
-        data_loader_ptr->dataparser_ptr_->train_depth_pack_.xyz.size(0) / 1e5f;
+        data_loader_ptr->dataparser_ptr_->train_depth_pack_.xyz.size(0) / 1e6f;
     sample_step = std::max(sample_step, 1);
     auto init_pts = data_loader_ptr->dataparser_ptr_->train_depth_pack_.xyz
                         .slice(0, 0, -1, sample_step)
