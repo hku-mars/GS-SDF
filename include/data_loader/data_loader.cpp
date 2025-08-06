@@ -398,7 +398,8 @@ void DataLoader::export_as_colmap_format(bool bin, bool llff) {
 
   // constraint the number of points to avoid OOM in 3DGS
   auto train_depth_xyz = dataparser_ptr_->train_depth_pack_.xyz.view({-1, 3});
-  int sample_step = train_depth_xyz.size(0) / 100000.f;
+  float downsample_pt_num = 1e7f;
+  int sample_step = train_depth_xyz.size(0) / downsample_pt_num;
   sample_step = std::max(sample_step, 1);
   auto points = train_depth_xyz.slice(0, 0, -1, sample_step).to(torch::kDouble);
 
@@ -487,7 +488,8 @@ void DataLoader::export_as_colmap_format_for_nerfstudio(bool bin) {
   // constraint the number of points to avoid OOM in 3DGS
 
   auto train_depth_xyz = dataparser_ptr_->train_depth_pack_.xyz.view({-1, 3});
-  int sample_step = train_depth_xyz.size(0) / 100000.f;
+  float downsample_pt_num = 1e7f;
+  int sample_step = train_depth_xyz.size(0) / downsample_pt_num;
   sample_step = std::max(sample_step, 1);
   auto points = train_depth_xyz.slice(0, 0, -1, sample_step).to(torch::kDouble);
 
