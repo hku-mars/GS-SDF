@@ -98,6 +98,7 @@ bool k_render_mode;
 
 // ablation param
 bool k_center_reg;
+bool k_mesh_init;
 
 void print_files(const std::string &_file_path) {
   std::cout << "print_files: " << _file_path << '\n';
@@ -432,6 +433,7 @@ void read_base_params(const std::filesystem::path &_base_config_path,
   fsSettings["sh_degree_interval"] >> k_sh_degree_interval;
 
   fsSettings["center_reg"] >> k_center_reg;
+  fsSettings["mesh_init"] >> k_mesh_init;
   fsSettings.release();
   // print_files(params_file_path);
 }

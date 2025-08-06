@@ -89,7 +89,7 @@ extern int k_sh_degree_interval;
 extern int k_sh_degree;
 extern bool k_render_mode;
 // ablation param
-extern bool k_center_reg;
+extern bool k_center_reg, k_mesh_init;
 
 void read_params(const std::filesystem::path &_config_path,
                  const std::filesystem::path &_data_path = "",

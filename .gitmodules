@@ -13,3 +13,6 @@
 [submodule "submodules/gsplat_cpp"]
 	path = submodules/gsplat_cpp
 	url = https://github.com/jianhengLiu/gsplat_cpp.git
+[submodule "submodules/simple-knn"]
+	path = submodules/simple-knn
+	url = https://github.com/jianhengLiu/simple-knn

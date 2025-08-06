@@ -37,6 +37,7 @@ dssim_weight: 0.2
 geo_init: 1
 color_init: 1 # 0: disable; 1: enable, init color from one-time training
 sky_init: 1
+mesh_init: 0 # 0: disable, init with points; 1: enable, init with mesh;
 near: 0.05
 far: 300
 depth_type: 0 # 0: mean depth (unbounded scene); 1: median depth (bounded scene) 

@@ -300,8 +300,16 @@ struct Rosbag : DataParser {
 #endif
     }
 
-    color_poses_ = std::get<0>(load_poses(color_pose_path_, false, 0));
+    auto color_info = load_poses(color_pose_path_, false, 0);
+    color_poses_ = std::get<0>(color_info);
     TORCH_CHECK(color_poses_.size(0) > 0);
+
+    cameras_[0] = sensor_.camera;
+    // Disable distortion for ROS data, as the exported images have
+    // already been undistorted
+    cameras_[0].distortion_ = false;
+    color_camera_ids_.resize(color_poses_.size(0), 0);
+
     depth_poses_ = std::get<0>(load_poses(depth_pose_path_, false, 0));
     TORCH_CHECK(depth_poses_.size(0) > 0);
 

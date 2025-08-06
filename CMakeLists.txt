@@ -124,8 +124,14 @@ add_library(optimizer_utils
             include/optimizer/optimizer_utils/optimizer_utils.cpp)
 target_link_libraries(optimizer_utils ${TORCH_LIBRARIES})
 
+include_directories(submodules/simple-knn)
+add_library(simple-knn submodules/simple-knn/simple_knn.cu
+                       submodules/simple-knn/spatial.cu)
+target_link_libraries(simple-knn ${TORCH_LIBRARIES})
+
 add_library(neural_gaussian include/neural_gaussian/neural_gaussian.cpp)
-target_link_libraries(neural_gaussian optimizer_utils neural_net gsplat_cpp)
+target_link_libraries(neural_gaussian optimizer_utils neural_net gsplat_cpp
+                      simple-knn)
 
 add_library(loss_utils include/optimizer/loss_utils/loss_utils.cpp)
 target_link_libraries(loss_utils ${TORCH_LIBRARIES})

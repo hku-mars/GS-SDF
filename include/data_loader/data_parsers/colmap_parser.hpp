@@ -70,16 +70,19 @@ struct Colmap : DataParser {
                                depth_path_.string());
     }
 
-    if (!camera_path_.empty()) {
-      cameras_ = load_cameras(camera_path_);
-      std::cout << "Loaded " << cameras_.size() << " cameras\n";
-    }
-
     auto color_info = load_poses(color_pose_path_, false, color_pose_type_,
                                  true, "", color_pose_w2c_);
     color_poses_ = std::get<0>(color_info);
     raw_color_filelists_ = std::get<2>(color_info);
     color_camera_ids_ = std::get<3>(color_info);
+
+    if (!camera_path_.empty()) {
+      cameras_ = load_cameras(camera_path_);
+      std::cout << "Loaded " << cameras_.size() << " cameras\n";
+    } else {
+      cameras_[0] = sensor_.camera;
+      color_camera_ids_.assign(raw_color_filelists_.size(), 0);
+    }
     for (auto &file : raw_color_filelists_) {
       file = color_path_ / file;
     }

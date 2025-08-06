@@ -58,6 +58,7 @@ struct Cameras {
   float d4 = 0;
 
   float focal_length_;
+  bool distortion_ = false;
 
   void set_distortion(const float &_d0, const float &_d1 = 0,
                       const float &_d2 = 0, const float &_d3 = 0,
@@ -169,7 +170,6 @@ private:
   std::vector<torch::Tensor> camera_ray_results_;
   torch::Tensor camera_rays_, camera_ray_norms_;
 
-  bool distortion_ = false;
   cv::Mat undist_map_x_, undist_map_y_;
 };
 
