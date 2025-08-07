@@ -110,12 +110,12 @@ torch::Tensor NeuralSLAM::sdf_regularization(const torch::Tensor &xyz,
   auto point_grad = grad_results[0];
   auto eik_loss = loss::eikonal_loss(point_grad, name);
   auto loss = k_eikonal_weight * eik_loss;
-  llog::RecordValue(name + "_eik", eik_loss.item<float>());
+  // llog::RecordValue(name + "_eik", eik_loss.item<float>());
 
   if (curvate_enable) {
     auto curv_loss = loss::curvate_loss(grad_results[1], name);
     loss += k_curvate_weight * curv_loss;
-    llog::RecordValue(name + "_curv", curv_loss.item<float>());
+    // llog::RecordValue(name + "_curv", curv_loss.item<float>());
   }
 
   bool align_ana_num = k_align_weight > 0;
@@ -126,7 +126,7 @@ torch::Tensor NeuralSLAM::sdf_regularization(const torch::Tensor &xyz,
 
     auto align_loss = (point_grad - point_numerical_grad).abs().mean();
     loss += k_align_weight * align_loss;
-    llog::RecordValue(name + "_align", align_loss.item<float>());
+    // llog::RecordValue(name + "_align", align_loss.item<float>());
   }
 
   return loss;
