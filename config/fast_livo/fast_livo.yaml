@@ -15,10 +15,10 @@ dataset_type: 4
 sh_degree: 3
 bck_color: 1 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
 
-min_range: 0.01
+min_range: 0.1
 max_range: 100
-ds_pt_num: 10000 # downsampled point number
-max_pt_num: 1000000
+ds_pt_num: 20000 # downsampled point number
+max_pt_num: 10000000
 
 outlier_remove: 1 # unnecessary for static scenes
 outlier_dist: 0.05
