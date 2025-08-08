@@ -353,8 +353,6 @@ void NeuralSLAM::gs_train(int _opt_iter) {
   llog::Reset();
   log_file_ = "gs_log.txt";
   std::string value_path = k_output_path / log_file_;
-  k_batch_num = k_batch_ray_num;
-  k_sample_pts_per_ray = k_batch_pt_num / (float)k_batch_num;
   // clear VRAM to see actual memory usage
   c10::cuda::CUDACachingAllocator::emptyCache();
 
@@ -1662,7 +1660,7 @@ bool NeuralSLAM::end() {
                              train_video_output.string();
       std::cout << "\033[34mCreating train comparison video: "
                 << train_video_cmd << "\033[0m\n";
-      std::system(train_video_cmd.c_str());
+      int ret = std::system(train_video_cmd.c_str());
     }
 
     // Create video for eval data if exists
@@ -1679,7 +1677,7 @@ bool NeuralSLAM::end() {
                             eval_video_output.string();
       std::cout << "\033[34mCreating eval comparison video: " << eval_video_cmd
                 << "\033[0m\n";
-      std::system(eval_video_cmd.c_str());
+      int ret = std::system(eval_video_cmd.c_str());
     }
 
     // Create video for test data if exists
@@ -1696,7 +1694,7 @@ bool NeuralSLAM::end() {
                             test_video_output.string();
       std::cout << "\033[34mCreating test comparison video: " << test_video_cmd
                 << "\033[0m\n";
-      std::system(test_video_cmd.c_str());
+      int ret = std::system(test_video_cmd.c_str());
     }
   }
 
