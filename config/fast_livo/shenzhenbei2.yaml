@@ -7,7 +7,7 @@ scene_config: "fast_livo.yaml"
 sdf_iter_step: 5000
 gs_iter_step: 30000
 
-leaf_sizes: 0.2
+leaf_sizes: 0.4
 bce_sigma: 1.0 # if get floaters, increase this value
 
 camera:
@@ -50,4 +50,4 @@ extrinsic:
               0.0, 0.0, 0.0, 1.0 ]
 
 map:
-   map_size: 50
+   map_size: 200

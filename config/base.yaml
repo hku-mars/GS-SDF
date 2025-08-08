@@ -20,7 +20,7 @@ geo_num_layer: 3
 trunc_sdf: 1
 surface_sample_num: 3
 free_sample_num: 3
-batch_pt_num: 16384 # color render pt batch size
+batch_pt_num: 32768 # color render pt batch size
 
 lr: 5e-3
 lr_end: 1e-4
@@ -44,8 +44,8 @@ depth_type: 0 # 0: mean depth (unbounded scene); 1: median depth (bounded scene)
 render_normal_weight: 0.01 # if you got not algined depth and color, please turn on render regularization
 isotropic_weight: 0.1 # isotropic regularization, less micro point, only for 2DGS
 gs_sdf_weight: 5e-3 # equal to 3d sdf normal; need to space to blending layer element, so not too large
-detach_sdf_grad: 1 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process; otherwise it might degenerate the results; and to reproduce paper results, set it to 1
-refine_gs_struct_start_iter: 0 #7000 #2000 #7000
+detach_sdf_grad: 0 # 0: disable; 1: enable # if you got accurate depth sensing, you can enable this to accelerate the training process; otherwise it might degenerate the results; and to reproduce paper results, set it to 1
+refine_gs_struct_start_iter: 7000 #2000 #7000
 visible_thr: 1e-1 # raise to improve efficiency
 
 # visualization
@@ -71,5 +71,5 @@ refine_every: 100
 reset_alpha_every: 30
 pause_refine: 0 # 0: disable; 1: enable, pause the refine process before training through all data. It reduces memory usage
 
-use_absgrad: 0 # Which typically leads to better results but requires to set the `grow_grad2d` to a higher value, e.g., 0.0008. Also, the :func:`rasterization` function should be called with `absgrad=True` as well so that the absolute gradients are computed. Not suggest for 2dgs
+use_absgrad: 1 # Which typically leads to better results but requires to set the `grow_grad2d` to a higher value, e.g., 0.0008. Also, the :func:`rasterization` function should be called with `absgrad=True` as well so that the absolute gradients are computed. Not suggest for 2dgs
 sh_degree_interval: 1000
