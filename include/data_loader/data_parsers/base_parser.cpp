@@ -98,7 +98,7 @@ sensor::Cameras DataParser::get_camera(const int &idx,
     break;
   }
   default:
-    throw std::runtime_error("Invalid pose type");
+    raw_idx = 0;
   }
   return cameras_.at(color_camera_ids_[raw_idx]);
 }
