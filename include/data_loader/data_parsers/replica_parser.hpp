@@ -30,7 +30,8 @@ struct Replica : DataParser {
     if (std::filesystem::exists(color_pose_path_)) {
       load_data();
     } else {
-      std::cout << "pose_path_ does not exist: " << color_pose_path_ << std::endl;
+      std::cout << "pose_path_ does not exist: " << color_pose_path_
+                << std::endl;
     }
   }
 
@@ -40,6 +41,10 @@ struct Replica : DataParser {
     depth_poses_ = std::get<0>(load_poses(color_pose_path_, false, 1));
     color_poses_ = depth_poses_;
     TORCH_CHECK(depth_poses_.size(0) > 0);
+
+    cameras_[0] = sensor_.camera;
+    cameras_[0].distortion_ = false;
+    color_camera_ids_.resize(color_poses_.size(0), 0);
 
     load_colors(".jpg", "frame", false, false);
     TORCH_CHECK(depth_poses_.size(0) == raw_color_filelists_.size());

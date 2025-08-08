@@ -253,7 +253,8 @@ cv::Mat DataParser::get_image_cv_mat(const int &idx,
   }
   case DataType::EvalColor:
     if (idx < eval_color_filelists_.size()) {
-      return cameras_.at(color_camera_ids_[idx])
+      // TODO: eval not supports multi cam yet
+      return cameras_.at(color_camera_ids_[0])
           .undistort(
               cv::imread(eval_color_filelists_[idx], cv::IMREAD_ANYCOLOR));
     }
