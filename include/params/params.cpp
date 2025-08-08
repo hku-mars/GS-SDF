@@ -200,6 +200,7 @@ void read_params(const std::filesystem::path &_config_path,
   k_vis_res = k_vis_res > k_leaf_size ? k_leaf_size : k_vis_res;
 
   k_batch_ray_num = k_batch_pt_num;
+  k_batch_num = k_batch_ray_num;
 
   if (!fsSettings["camera"].isNone()) {
     k_sensor.camera.model = fsSettings["camera"]["model"];
