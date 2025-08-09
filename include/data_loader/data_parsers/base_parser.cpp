@@ -830,7 +830,7 @@ void DataParser::load_colors(const std::string &file_extension,
       auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
       if (llff) {
         if (i % 8 != 0) {
-          train_to_raw_map_ids_[i - i / 8] = i;
+          train_to_raw_map_ids_[i - i / 8 - 1] = i;
         }
       } else {
         train_to_raw_map_ids_[i] = i;
@@ -847,7 +847,7 @@ void DataParser::load_colors(const std::string &file_extension,
         auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
         if (llff) {
           if (i % 8 != 0) {
-            train_color_.index_put_({i - i / 8}, color);
+            train_color_.index_put_({i - i / 8 - 1}, color);
           }
         } else {
           train_color_.index_put_({i}, color);
@@ -940,14 +940,15 @@ void DataParser::load_depths(const std::string &file_extension,
         auto xyz = direction * depth + pos;
         if (llff) {
           if (i % 8 != 0) {
-            train_depth_pack_.depth.index_put_({i - i / 8}, depth);
-            train_depth_pack_.direction.index_put_({i - i / 8}, direction);
-            train_depth_pack_.xyz.index_put_({i - i / 8}, xyz);
+            train_depth_pack_.depth.index_put_({i - i / 8 - 1}, depth);
+            train_depth_pack_.direction.index_put_({i - i / 8 - 1}, direction);
+            train_depth_pack_.xyz.index_put_({i - i / 8 - 1}, xyz);
 
-            train_depth_pack_.origin.index_put_({i - i / 8}, pos.view({1, 3}));
+            train_depth_pack_.origin.index_put_({i - i / 8 - 1},
+                                                pos.view({1, 3}));
 
-            train_depth_poses_.index_put_({i - i / 8}, pose);
-            train_depth_filelists_[i - i / 8] = raw_depth_filelists_[i];
+            train_depth_poses_.index_put_({i - i / 8 - 1}, pose);
+            train_depth_filelists_[i - i / 8 - 1] = raw_depth_filelists_[i];
           }
         } else {
           train_depth_pack_.depth.index_put_({i}, depth);
@@ -955,7 +956,7 @@ void DataParser::load_depths(const std::string &file_extension,
           train_depth_pack_.xyz.index_put_({i}, xyz);
           train_depth_pack_.origin.index_put_({i}, pos.view({1, 3}));
 
-          train_depth_poses_.index_put_({i - i / 8}, pose);
+          train_depth_poses_.index_put_({i - i / 8 - 1}, pose);
           train_depth_filelists_[i] = raw_depth_filelists_[i];
         }
       }
