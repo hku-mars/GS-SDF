@@ -915,7 +915,7 @@ void DataParser::load_depths(const std::string &file_extension,
           depth = dist.norm(2, -1, true);
           direction = dist / depth;
         } else {
-          auto points_ndir_dirn = get_distance_ndir_zdirn(i - 1);
+          auto points_ndir_dirn = get_distance_ndir_zdirn(i);
           depth = points_ndir_dirn[0].view({-1, 1});
           direction = points_ndir_dirn[1].view({-1, 3});
           direction = direction.mm(rot.t());
