@@ -414,7 +414,7 @@ void NeuralSLAM::gs_train(int _opt_iter) {
     int vis_gs_num = 0;
 
     RaySamples gs_raysamples;
-    if (k_gs_sdf_reg && (i >= k_refine_gs_struct_start_iter)) {
+    if (k_gs_sdf_reg) {
       static auto p_t_opt = llog::CreateTimer("   opt");
       p_t_opt->tic();
       auto gs_samples = render_results["samples"];

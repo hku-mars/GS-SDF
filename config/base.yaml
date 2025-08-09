@@ -71,5 +71,5 @@ refine_every: 100
 reset_alpha_every: 30
 pause_refine: 0 # 0: disable; 1: enable, pause the refine process before training through all data. It reduces memory usage
 
-use_absgrad: 1 # Which typically leads to better results but requires to set the `grow_grad2d` to a higher value, e.g., 0.0008. Also, the :func:`rasterization` function should be called with `absgrad=True` as well so that the absolute gradients are computed. Not suggest for 2dgs
+use_absgrad: 0 # Which typically leads to better results but requires to set the `grow_grad2d` to a higher value, e.g., 0.0008. Also, the :func:`rasterization` function should be called with `absgrad=True` as well so that the absolute gradients are computed. Not suggest for 2dgs
 sh_degree_interval: 1000
