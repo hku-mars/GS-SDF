@@ -15,6 +15,8 @@ llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
 #   NeuralRGBD = 2,
 #   KITTI = 3,
 #   FastLivo = 4,
+#   Oxford Spires = 5,
+#   Colmap = 6
 dataset_type: 6
 camera_path: "cameras.txt"
 color_path: "images"
@@ -49,12 +51,13 @@ vis_resolution: 0.1 # better no more than leaf_sizes or will miss faces
 export_resolution: 0.04
 fps: 10
 
+# This is the camera configuration for the visualization, but the scale do adjust the training images.
 camera:
+   scale: 1.0
+
    model: 1 # 0: pinhole; 1: equidistant
    width: 2448
    height: 2048
-   scale: 1.0
-
    fx: 1420.341348618206
    fy: 1420.997567384703
    cx: 1224.37438458383

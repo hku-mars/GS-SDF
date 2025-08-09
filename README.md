@@ -1,5 +1,8 @@
 # GS-SDF: LiDAR-Augmented Gaussian Splatting and Neural SDF for Geometrically Consistent Rendering and Reconstruction
 
+### ⭐ News
+- 2025/08/09: Support colmap-format [Multi-camera datasets](#44-multi-camera-datasets).
+
 ## 1. Introduction
 
 ![alt text](pics/pipeline.jpg)
@@ -131,6 +134,23 @@ If you use GS-SDF for your academic research, please cite the following paper.
   rosbag record /aft_mapped_to_init /origin_img /cloud_registered_body /tf /tf_static /path -O "fast_livo2_YOUR_DOWNLOADED" -b 2048
   # 3. open another terminal to play your downloaded/collected bag
   rosbag play YOUR_DOWNLOADED.bag
+  ```
+
+### 4.4. Multi-camera datasets
+
+- Following [Colmap-txt-format](https://colmap.github.io/format.html) to prepare the multi-camera datasets as follows:
+  ```bash
+  ├── data
+  │   ├── colmap_dataset
+  │   │   ├── cameras.txt
+  │   │   ├── images.txt
+  │   │   ├── depths.txt
+  │   │   ├── images/
+  │   │   ├── depths/
+  ```
+  You can download the multi-camera demo datasets from [M2Mapping Datasets](https://furtive-lamprey-00b.notion.site/M2Mapping-Datasets-e6318dcd710e4a9d8a4f4b3fbe176764):
+  ```bash
+  rosrun neural_mapping neural_mapping_node train src/GS-SDF/config/colmap/shenzhenbei.yaml src/GS-SDF/data/multi_cam_demo_shenzhenbei_202404041751
   ```
 
 ## 5. Run
