@@ -826,14 +826,14 @@ void DataParser::load_colors(const std::string &file_extension,
 
     train_to_raw_map_ids_.resize(train_color_num);
 #pragma omp parallel for
-    for (int i = 1; i <= raw_color_num; i++) {
-      auto pose = get_pose(i - 1, DataType::RawColor).slice(0, 0, 3);
+    for (int i = 0; i < raw_color_num; i++) {
+      auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
       if (llff) {
         if (i % 8 != 0) {
-          train_to_raw_map_ids_[i - i / 8 - 1] = i - 1;
+          train_to_raw_map_ids_[i - i / 8] = i;
         }
       } else {
-        train_to_raw_map_ids_[i - 1] = i - 1;
+        train_to_raw_map_ids_[i] = i;
       }
     }
 
@@ -842,15 +842,15 @@ void DataParser::load_colors(const std::string &file_extension,
           torch::zeros({train_color_num, (int)(sensor_.camera.height),
                         (int)(sensor_.camera.width), 3});
 #pragma omp parallel for
-      for (int i = 1; i <= raw_color_filelists_.size(); i++) {
-        auto color = get_color_image(i - 1, DataType::RawColor);
-        auto pose = get_pose(i - 1, DataType::RawColor).slice(0, 0, 3);
+      for (int i = 0; i < raw_color_filelists_.size(); i++) {
+        auto color = get_color_image(i, DataType::RawColor);
+        auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
         if (llff) {
           if (i % 8 != 0) {
-            train_color_.index_put_({i - i / 8 - 1}, color);
+            train_color_.index_put_({i - i / 8}, color);
           }
         } else {
-          train_color_.index_put_({i - 1}, color);
+          train_color_.index_put_({i}, color);
         }
       }
       std::cout << train_color_.sizes() << std::endl;
@@ -903,14 +903,14 @@ void DataParser::load_depths(const std::string &file_extension,
 
       bool world = false;
 #pragma omp parallel for
-      for (int i = 1; i <= raw_depth_num; i++) {
-        auto pose = get_pose(i - 1, DataType::RawDepth).slice(0, 0, 3);
+      for (int i = 0; i < raw_depth_num; i++) {
+        auto pose = get_pose(i, DataType::RawDepth).slice(0, 0, 3);
         auto pos = pose.slice(1, 3, 4).squeeze();
         auto rot = pose.slice(1, 0, 3);
 
         torch::Tensor depth, direction;
         if (world) {
-          auto pointcloud = get_depth_image(i - 1);
+          auto pointcloud = get_depth_image(i);
           auto dist = pointcloud - pos.view({1, 3});
           depth = dist.norm(2, -1, true);
           direction = dist / depth;
@@ -940,24 +940,23 @@ void DataParser::load_depths(const std::string &file_extension,
         auto xyz = direction * depth + pos;
         if (llff) {
           if (i % 8 != 0) {
-            train_depth_pack_.depth.index_put_({i - i / 8 - 1}, depth);
-            train_depth_pack_.direction.index_put_({i - i / 8 - 1}, direction);
-            train_depth_pack_.xyz.index_put_({i - i / 8 - 1}, xyz);
+            train_depth_pack_.depth.index_put_({i - i / 8}, depth);
+            train_depth_pack_.direction.index_put_({i - i / 8}, direction);
+            train_depth_pack_.xyz.index_put_({i - i / 8}, xyz);
 
-            train_depth_pack_.origin.index_put_({i - i / 8 - 1},
-                                                pos.view({1, 3}));
+            train_depth_pack_.origin.index_put_({i - i / 8}, pos.view({1, 3}));
 
-            train_depth_poses_.index_put_({i - i / 8 - 1}, pose);
-            train_depth_filelists_[i - i / 8 - 1] = raw_depth_filelists_[i - 1];
+            train_depth_poses_.index_put_({i - i / 8}, pose);
+            train_depth_filelists_[i - i / 8] = raw_depth_filelists_[i];
           }
         } else {
-          train_depth_pack_.depth.index_put_({i - 1}, depth);
-          train_depth_pack_.direction.index_put_({i - 1}, direction);
-          train_depth_pack_.xyz.index_put_({i - 1}, xyz);
-          train_depth_pack_.origin.index_put_({i - 1}, pos.view({1, 3}));
+          train_depth_pack_.depth.index_put_({i}, depth);
+          train_depth_pack_.direction.index_put_({i}, direction);
+          train_depth_pack_.xyz.index_put_({i}, xyz);
+          train_depth_pack_.origin.index_put_({i}, pos.view({1, 3}));
 
-          train_depth_poses_.index_put_({i - i / 8 - 1}, pose);
-          train_depth_filelists_[i - 1] = raw_depth_filelists_[i - 1];
+          train_depth_poses_.index_put_({i - i / 8}, pose);
+          train_depth_filelists_[i] = raw_depth_filelists_[i];
         }
       }
       std::cout << train_depth_pack_.depth.sizes() << '\n';
