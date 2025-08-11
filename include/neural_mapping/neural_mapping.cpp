@@ -1047,7 +1047,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
 
   for (const auto &i : iter_bar) {
     // Skip frames if necessary (computed once for efficiency)
-    if (llff_skip_enabled && (i % 8 != 0)) {
+    if (llff_skip_enabled && ((i + 1) % 8 != 0)) {
       continue;
     }
 
@@ -1062,7 +1062,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
     }
 
     // Queue images for saving - use test path for certain frames if needed
-    bool is_test = (!eval) && k_llff && (i % 8 == 0);
+    bool is_test = (!eval) && k_llff && ((i + 1) % 8 == 0);
     std::filesystem::path base_dir = is_test ? (log_path / "test") : output_dir;
 
     // Queue image saving tasks
