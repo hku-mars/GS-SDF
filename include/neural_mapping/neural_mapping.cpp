@@ -255,8 +255,9 @@ NeuralSLAM::gs_train_batch_iter(const int &iter, const bool &opt_struct) {
       depth_normal = depth_normal * render_alpha;
 
       auto render_normal = render_results["render_normal"][0];
-      normal_error =
-          (1.0f - (depth_normal * render_normal).sum(-1).nan_to_num()).mean();
+      normal_error = (render_alpha.square().squeeze(-1) -
+                      (depth_normal * render_normal).sum(-1).nan_to_num())
+                         .mean();
       gs_loss += k_render_normal_weight * normal_error;
     }
   }
