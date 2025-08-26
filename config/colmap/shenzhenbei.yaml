@@ -5,7 +5,7 @@ base_config: "../base.yaml"
 sdf_iter_step: 5000
 gs_iter_step: 30000
 
-preload: 0 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+preload: 1 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
 llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
 
 
@@ -30,7 +30,7 @@ depth_pose_type: 4
 depth_type: 3 # 0: image; 1: ply; 2: bin; 3: pcd
 
 sh_degree: 3
-bck_color: 1 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
+bck_color: 2 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
 
 frame_rate: 10
 min_range: 0.1

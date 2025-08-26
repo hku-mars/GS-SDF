@@ -255,8 +255,9 @@ NeuralSLAM::gs_train_batch_iter(const int &iter, const bool &opt_struct) {
       depth_normal = depth_normal * render_alpha;
 
       auto render_normal = render_results["render_normal"][0];
-      normal_error =
-          (1.0f - (depth_normal * render_normal).sum(-1).nan_to_num()).mean();
+      normal_error = (render_alpha.square().squeeze(-1) -
+                      (depth_normal * render_normal).sum(-1).nan_to_num())
+                         .mean();
       gs_loss += k_render_normal_weight * normal_error;
     }
   }
@@ -997,7 +998,10 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
       std::replace(gt_file_name.begin(), gt_file_name.end(), '/', '_');
       std::replace(gt_file_name.begin(), gt_file_name.end(), '\\', '_');
       auto gt_color_path = task.base_dir / "color/gt" / gt_file_name;
-      if (data_loader_ptr->dataparser_ptr_->sensor_.camera.scale != 1.0f) {
+      if ((data_loader_ptr->dataparser_ptr_
+               ->get_camera(task.index, task.image_type)
+               .distortion_) ||
+          (data_loader_ptr->dataparser_ptr_->sensor_.camera.scale != 1.0f)) {
         auto gt = data_loader_ptr->dataparser_ptr_->get_image_cv_mat(
             task.index, task.image_type);
         cv::resize(
@@ -1044,7 +1048,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
 
   for (const auto &i : iter_bar) {
     // Skip frames if necessary (computed once for efficiency)
-    if (llff_skip_enabled && (i % 8 != 0)) {
+    if (llff_skip_enabled && ((i + 1) % 8 != 0)) {
       continue;
     }
 
@@ -1059,7 +1063,7 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
     }
 
     // Queue images for saving - use test path for certain frames if needed
-    bool is_test = (!eval) && k_llff && (i % 8 == 0);
+    bool is_test = (!eval) && k_llff && ((i + 1) % 8 == 0);
     std::filesystem::path base_dir = is_test ? (log_path / "test") : output_dir;
 
     // Queue image saving tasks

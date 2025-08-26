@@ -257,7 +257,7 @@ int DataLoader::export_image(std::filesystem::path &colmap_sparse_path,
 
     std::ofstream *tmp_pose_file;
     std::filesystem::path *tmp_file_path;
-    if (llff && (i % 8 == 0)) {
+    if (llff && ((i + 1) % 8 == 0)) {
       tmp_pose_file = &test_colmap_color_pose_file;
       tmp_file_path = &test_colmap_color_file_path;
     } else {
@@ -398,7 +398,7 @@ void DataLoader::export_as_colmap_format(bool bin, bool llff) {
 
   // constraint the number of points to avoid OOM in 3DGS
   auto train_depth_xyz = dataparser_ptr_->train_depth_pack_.xyz.view({-1, 3});
-  float downsample_pt_num = 1e7f;
+  float downsample_pt_num = 2e6f;
   int sample_step = train_depth_xyz.size(0) / downsample_pt_num;
   sample_step = std::max(sample_step, 1);
   auto points = train_depth_xyz.slice(0, 0, -1, sample_step).to(torch::kDouble);
@@ -488,7 +488,7 @@ void DataLoader::export_as_colmap_format_for_nerfstudio(bool bin) {
   // constraint the number of points to avoid OOM in 3DGS
 
   auto train_depth_xyz = dataparser_ptr_->train_depth_pack_.xyz.view({-1, 3});
-  float downsample_pt_num = 1e7f;
+  float downsample_pt_num = 2e6f;
   int sample_step = train_depth_xyz.size(0) / downsample_pt_num;
   sample_step = std::max(sample_step, 1);
   auto points = train_depth_xyz.slice(0, 0, -1, sample_step).to(torch::kDouble);
