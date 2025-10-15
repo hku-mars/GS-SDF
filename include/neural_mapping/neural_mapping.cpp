@@ -414,7 +414,6 @@ void NeuralSLAM::gs_train(int _opt_iter) {
     auto gs_align_loss = torch::tensor(0.0f, k_device);
     int vis_gs_num = 0;
 
-    RaySamples gs_raysamples;
     if (k_gs_sdf_reg) {
       static auto p_t_opt = llog::CreateTimer("   opt");
       p_t_opt->tic();
@@ -440,8 +439,6 @@ void NeuralSLAM::gs_train(int _opt_iter) {
         p_t_sdf->tic();
         auto gs_samples_sdf_results = local_map_ptr->get_sdf(gs_samples);
         auto gs_samples_sdf = gs_samples_sdf_results[0];
-        auto gs_samples_isigma = gs_samples_sdf_results[1];
-        gs_raysamples.pred_isigma = gs_samples_isigma;
         p_t_sdf->toc_sum();
         p_t_opt->toc_sum();
 

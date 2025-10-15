@@ -348,16 +348,16 @@ NeuralGS::NeuralGS(const LocalMap::Ptr &_local_map_ptr,
 
     // Size proportional to sphere radius
     // 4πr^2 / num_sky_points * 1.1 (inflation factor)
-    // auto sky_scale = torch::full(
-    //     {num_sky_points, 3},
-    //     log(1.1f * M_PI * sphere_radius * sphere_radius / num_sky_points),
-    //     device);
+    auto sky_scale = torch::full(
+        {num_sky_points, 3},
+        log(1.1f * M_PI * sphere_radius * sphere_radius / num_sky_points),
+        device);
 
-    auto sky_scale =
-        torch::log(torch::sqrt(torch::clamp_min(distCUDA2(sky_anchor), 1e-6f)))
-            .unsqueeze(-1)
-            .repeat({1, 3})
-            .to(device);
+    // auto sky_scale =
+    //     torch::log(torch::sqrt(torch::clamp_min(distCUDA2(sky_anchor), 1e-6f)))
+    //         .unsqueeze(-1)
+    //         .repeat({1, 3})
+    //         .to(device);
     auto sky_tmp_basis = torch::stack({sphere_samples.select(-1, 1),
                                        sphere_samples.select(-1, 2),
                                        sphere_samples.select(-1, 0)},
