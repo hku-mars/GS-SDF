@@ -43,7 +43,7 @@ struct Kitti : DataParser {
 
     load_colors(".png", "", false, true);
     TORCH_CHECK(color_poses_.size(0) == raw_color_filelists_.size());
-    load_depths(".bin", "", false, true);
+    load_depths(depth_type_, "", false, true);
     TORCH_CHECK(depth_poses_.size(0) == raw_depth_filelists_.size());
   }
 

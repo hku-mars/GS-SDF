@@ -11,6 +11,7 @@ struct Replica : DataParser {
                    const int &_ds_pt_num = 1e5)
       : DataParser(_dataset_path, _device, _preload, _res_scale,
                    coords::SystemType::OpenCV, sensor::Sensors(), _ds_pt_num) {
+    depth_type_ = DepthType::Image;
     color_pose_path_ = dataset_path_ / "traj.txt";
     color_path_ = dataset_path_ / "results";
     depth_path_ = color_path_;
@@ -48,7 +49,7 @@ struct Replica : DataParser {
 
     load_colors(".jpg", "frame", false, false);
     TORCH_CHECK(depth_poses_.size(0) == raw_color_filelists_.size());
-    load_depths(".png", "depth", false, false);
+    load_depths(depth_type_, "depth", false, false);
     TORCH_CHECK(raw_color_filelists_.size() == raw_depth_filelists_.size());
 
     load_eval_data();
@@ -63,7 +64,7 @@ struct Replica : DataParser {
 
     load_colors(".jpg", "frame", true);
     TORCH_CHECK(eval_color_poses_.size(0) == eval_color_filelists_.size());
-    load_depths(".png", "depth", true);
+    load_depths(depth_type_, "depth", true);
     TORCH_CHECK(eval_color_filelists_.size() == eval_depth_filelists_.size());
 
     eval_depth_poses_ = eval_color_poses_;

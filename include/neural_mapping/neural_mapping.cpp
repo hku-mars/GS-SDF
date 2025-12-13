@@ -782,6 +782,21 @@ bool NeuralSLAM::build_occ_map() {
   data_loader_ptr->dataparser_ptr_->train_depth_pack_.xyz =
       data_loader_ptr->dataparser_ptr_->train_depth_pack_.xyz.view({-1, 3});
 
+  if (k_max_pt_num > 0) {
+    auto total_pt_num =
+        data_loader_ptr->dataparser_ptr_->train_depth_pack_.depth.size(0);
+    if (total_pt_num > k_max_pt_num) {
+      auto sample_indices = torch::randperm(total_pt_num)
+                                .to(torch::kLong)
+                                .slice(0, 0, k_max_pt_num);
+      data_loader_ptr->dataparser_ptr_->train_depth_pack_ =
+          data_loader_ptr->dataparser_ptr_->train_depth_pack_.index_select(
+              0, sample_indices);
+      std::cout << "Sampled " << k_max_pt_num
+                << " points from original " << total_pt_num << " points.\n";
+    }
+  }
+
   if (k_export_train_pcl) {
     std::string train_points_ply_file = k_output_path / "train_points.ply";
     ply_utils::export_to_ply(

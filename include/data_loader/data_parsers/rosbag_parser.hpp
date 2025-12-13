@@ -21,7 +21,7 @@ struct Rosbag : DataParser {
       : DataParser(_bag_path.parent_path(), _device, _preload, _res_scale,
                    _dataset_system_type, _sensor, _ds_pt_num),
         bag_path_(_bag_path) {
-
+    depth_type_ = DepthType::PLY;
     dataset_name_ = bag_path_.filename();
     dataset_name_ = dataset_name_.replace_extension();
 
@@ -315,7 +315,7 @@ struct Rosbag : DataParser {
 
     load_colors(".png", "", false, true);
     TORCH_CHECK(color_poses_.size(0) == raw_color_filelists_.size());
-    load_depths(".ply", "", false, true);
+    load_depths(depth_type_, "", false, true);
     TORCH_CHECK(depth_poses_.size(0) == raw_depth_filelists_.size());
   }
 

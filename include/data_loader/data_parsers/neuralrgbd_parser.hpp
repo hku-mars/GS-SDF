@@ -13,6 +13,7 @@ struct NeuralRGBD : DataParser {
                       const int &_ds_pt_num = 0)
       : DataParser(_dataset_path, _device, _preload, _res_scale,
                    _dataset_system_type) {
+    depth_type_ = DepthType::Image;
     color_pose_path_ = dataset_path_ / "poses.txt";
     color_path_ = dataset_path_ / "images";
     switch (_depth_type) {
@@ -55,7 +56,7 @@ struct NeuralRGBD : DataParser {
 
     load_colors(".png", "img", false, true);
     TORCH_CHECK(depth_poses_.size(0) == raw_color_filelists_.size());
-    load_depths(".png", "depth", false, true);
+    load_depths(depth_type_, "depth", false, true);
     TORCH_CHECK(raw_color_filelists_.size() == raw_depth_filelists_.size());
   }
 

@@ -64,7 +64,7 @@ struct Spires : DataParser {
       load_colors(".jpg", "", false, false);
       std::cout << "color_poses: " << color_poses_.size(0) << " color_files"
                 << raw_color_filelists_.size() << std::endl;
-      load_depths(".pcd", "", false, false);
+      load_depths(depth_type_, "", false, false);
       std::cout << "depth_poses: " << depth_poses_.size(0)
                 << " depth_files: " << raw_depth_filelists_.size() << std::endl;
 
@@ -117,7 +117,7 @@ struct Spires : DataParser {
 
     load_colors(".jpg", "", false, true);
     TORCH_CHECK(color_poses_.size(0) == raw_color_filelists_.size());
-    load_depths(".pcd", "", false, true);
+    load_depths(depth_type_, "", false, true);
     TORCH_CHECK(depth_poses_.size(0) == raw_depth_filelists_.size());
   }
 

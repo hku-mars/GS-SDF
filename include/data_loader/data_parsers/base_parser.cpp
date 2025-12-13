@@ -452,7 +452,7 @@ DataParser::load_cameras(const std::string &camera_path) {
     camera.width = width;
     camera.height = height;
 
-    if (model_type == "OPENCV") {
+    if ((model_type == "OPENCV") || (model_type == "PINHOLE")) {
       camera.model = 0; // Pinhole model
       float fx, fy, cx, cy;
       iss >> fx >> fy >> cx >> cy;
@@ -862,9 +862,26 @@ void DataParser::load_colors(const std::string &file_extension,
   }
 }
 
-void DataParser::load_depths(const std::string &file_extension,
+void DataParser::load_depths(const DepthType& depth_type,
                              const std::string &prefix, const bool eval,
                              const bool &llff) {
+  std::string file_extension;
+  switch (depth_type) {
+  case DepthType::Image:
+    file_extension = ".png";
+    break;
+  case DepthType::PLY:
+    file_extension = ".ply";
+    break;
+  case DepthType::BIN:
+    file_extension = ".bin";
+    break;
+  case DepthType::PCD:
+    file_extension = ".pcd";
+    break;
+  default:
+    throw std::runtime_error("Unsupported depth type");
+  }
   if (!eval) {
     assert(std::filesystem::exists(depth_path_));
     if (raw_depth_filelists_.size() == 0) {

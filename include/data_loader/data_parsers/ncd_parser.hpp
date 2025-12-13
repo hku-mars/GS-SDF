@@ -11,7 +11,7 @@ struct NewerCollege : DataParser {
       const int &_ds_pt_num = 1e5)
       : DataParser(_dataset_path, _device, _preload, _dataset_system_type,
                    sensor::Sensors(), _ds_pt_num) {
-
+    depth_type_ = DepthType::Image;
     // Deprecated: no color images
 
     std::cout << dataset_path_ << std::endl;
@@ -47,7 +47,7 @@ struct NewerCollege : DataParser {
 
     load_colors(".jpg", "frame", false, true);
     TORCH_CHECK(depth_poses_.size(0) == color_filelists_.size());
-    load_depths(".png", "depth", false, true);
+    load_depths(depth_type_, "depth", false, true);
     TORCH_CHECK(color_filelists_.size() == depth_filelists_.size());
   }
 

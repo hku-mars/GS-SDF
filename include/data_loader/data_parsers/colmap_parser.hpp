@@ -105,7 +105,7 @@ struct Colmap : DataParser {
     std::cout << "Loaded " << depth_poses_.size(0) << " depth poses\n";
     TORCH_CHECK(depth_poses_.size(0) > 0);
 
-    load_depths(".pcd", "", false, true);
+    load_depths(depth_type_, "", false, true);
     std::cout << "Loaded " << raw_depth_filelists_.size() << " depths\n";
     TORCH_CHECK(depth_poses_.size(0) == raw_depth_filelists_.size());
   }

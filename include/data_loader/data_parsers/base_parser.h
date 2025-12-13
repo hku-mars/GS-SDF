@@ -88,7 +88,7 @@ struct DataParser {
   float res_scale_;
 
   std::string color_type_ = ".jpg";
-  int depth_type_ = DepthType::Image; // 0: image; 1: ply; 2: bin; 3: pcd
+  DepthType depth_type_ = DepthType::Image; // 0: image; 1: ply; 2: bin; 3: pcd
   torch::Tensor
       T_B_S_; // [4, 4]; extrinsic param, transformation from sensor to body
   torch::Tensor T_S_B_;
@@ -232,7 +232,7 @@ struct DataParser {
                            const std::string &prefix = "",
                            const bool eval = false, const bool &llff = false);
 
-  virtual void load_depths(const std::string &file_extension,
+  virtual void load_depths(const DepthType& depth_type,
                            const std::string &prefix = "",
                            const bool eval = false, const bool &llff = false);
 
