@@ -1,0 +1,73 @@
+%YAML:1.0
+
+base_config: "../base.yaml"
+
+sdf_iter_step: 5000
+gs_iter_step: 30000
+
+preload: 1 # 0: disable; 1: enable # accelerate the loading process but will cost more memory
+llff: 1 # 0: disable; 1: enable; every 8 frame will be used for evaluation
+
+
+# dataset_type
+#   Replica = 0,
+#   R3live = 1,
+#   NeuralRGBD = 2,
+#   KITTI = 3,
+#   FastLivo = 4,
+#   Oxford Spires = 5,
+#   Colmap = 6
+dataset_type: 6
+camera_path: "cameras.txt"
+color_path: "images"
+color_type: ".png"
+color_pose_path: "images.txt"
+color_pose_type: 4
+color_pose_w2c: 1
+depth_path: "depths"
+depth_pose_path: "depths.txt"
+depth_pose_type: 4
+depth_type: 1 # 0: image; 1: ply; 2: bin; 3: pcd
+
+sh_degree: 3
+bck_color: 0 # 0: black background; 1: white background; 2: discourage transparancy; degenerate results
+
+frame_rate: 10
+min_range: 0.01
+max_range: 100
+ds_pt_num: 10000 # downsampled point number
+max_pt_num: 1000000
+
+outlier_remove: 1 # unnecessary for static scenes
+outlier_dist: 0.05
+outlier_removal_interval: 2000
+
+# scene config
+leaf_sizes: 0.2
+bce_sigma: 1.0 # if get floaters, increase this value
+
+# visualization
+vis_resolution: 0.1 # better no more than leaf_sizes or will miss faces
+export_resolution: 0.04
+fps: 10
+
+# This is the camera configuration for the visualization, but the scale do adjust the training images.
+camera:
+   scale: 1.0
+
+   model: 1 # 0: pinhole; 1: equidistant
+   width: 640
+   height: 512
+   fx: 661.21509325
+   fy: 662.56687255
+   cx: 312.6427
+   cy: 256.73286345
+
+   d0: -0.0625867993
+   d1: 0.1641814187
+   d2: 0.0059362873
+   d3: 0.0029017112
+   d4: 0.0
+
+map:
+   map_size: 300

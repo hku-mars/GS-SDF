@@ -131,9 +131,21 @@ If you use GS-SDF for your academic research, please cite the following paper.
   # 1. open a terminal to start LIVO
   roslaunch fast_livo mapping_avia.launch
   # 2. open another terminal to get ready for bag recording
-  rosbag record /aft_mapped_to_init /origin_img /cloud_registered_body /tf /tf_static /path -O "fast_livo2_YOUR_DOWNLOADED" -b 2048
+  rosbag record /aft_mapped_to_init_lidar /aft_mapped_to_init_cam /origin_img/compressed /cloud_registered_body /tf /tf_static /path -O "fast_livo2_YOUR_DOWNLOADED" -b 4096 -O YOUR_BAG_NAME.bag
   # 3. open another terminal to play your downloaded/collected bag
   rosbag play YOUR_DOWNLOADED.bag
+  # 4. convert rosbag into colmap format
+  python scripts/rosbag_convert/rosbag_to_colmap.py \                       
+    --bag_path data/YOUR_BAG_NAME.bag \--image_topic /origin_img/compressed \
+    --image_pose_topic /aft_mapped_to_init_cam \
+    --point_topic /cloud_registered_body \
+    --point_pose_topic /aft_mapped_to_init_lidar \
+    --output_dir data/YOUR_BAG_NAME_colmap \
+    --fx [fx] --fy [fy] --cx [cx] --cy [cy] \
+    --width [width] --height [height] \
+    --k1=[k1] --k2=[k2] --p1=[p1] --p2=[p2]
+  # 5. run GS-SDF with the converted colmap format data
+  rosrun neural_mapping neural_mapping_node train src/GS-SDF/config/colmap/colmap_example.yaml data/YOUR_BAG_NAME_colmap
   ```
 
 ### 4.4. Multi-camera datasets

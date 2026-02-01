@@ -96,7 +96,8 @@ struct Colmap : DataParser {
       mask = get_color_image(mask_file_, 0) > 0;
     }
 
-    auto depth_info = load_poses(depth_pose_path_, false, depth_pose_type_);
+    auto depth_info = load_poses(
+      depth_pose_path_, false, depth_pose_type_, false, "", color_pose_w2c_);
     depth_poses_ = std::get<0>(depth_info);
     raw_depth_filelists_ = std::get<2>(depth_info);
     for (auto &file : raw_depth_filelists_) {
