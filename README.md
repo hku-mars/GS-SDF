@@ -1,6 +1,7 @@
 # GS-SDF: LiDAR-Augmented Gaussian Splatting and Neural SDF for Geometrically Consistent Rendering and Reconstruction
 
 ### ⭐ News
+- 2026/02/03: Update [Custom FAST-LIVO2 Datasets](#44-custom-fast-livo2-datasets) for better adaption to general collection settings.
 - 2025/08/09: Support colmap-format [Multi-camera datasets](#44-multi-camera-datasets).
 
 ## 1. Introduction
