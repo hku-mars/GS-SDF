@@ -41,7 +41,9 @@ struct Colmap : DataParser {
     color_pose_w2c_ = config.color_pose_w2c;
     depth_pose_type_ = config.depth_pose_type;
 
-    load_intrinsics();
+    if (camera_path_.empty()) {
+      load_intrinsics();
+    }
     load_data();
 
     int skip_first_num = 0;
@@ -79,6 +81,19 @@ struct Colmap : DataParser {
     if (!camera_path_.empty()) {
       cameras_ = load_cameras(camera_path_);
       std::cout << "Loaded " << cameras_.size() << " cameras\n";
+      if (!cameras_.empty()) {
+        auto scale = sensor_.camera.scale;
+        sensor_.camera = cameras_.begin()->second;
+        sensor_.camera.scale = scale;
+        std::cout << "Camera intrinsics (from cameras.txt, scale="
+                  << sensor_.camera.scale << "):\n"
+                  << "Width: " << sensor_.camera.width << "\n"
+                  << "Height: " << sensor_.camera.height << "\n"
+                  << "fx: " << sensor_.camera.fx << "\n"
+                  << "fy: " << sensor_.camera.fy << "\n"
+                  << "cx: " << sensor_.camera.cx << "\n"
+                  << "cy: " << sensor_.camera.cy << "\n";
+      }
     } else {
       cameras_[0] = sensor_.camera;
       color_camera_ids_.assign(raw_color_filelists_.size(), 0);

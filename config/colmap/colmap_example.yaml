@@ -51,23 +51,10 @@ vis_resolution: 0.1 # better no more than leaf_sizes or will miss faces
 export_resolution: 0.04
 fps: 10
 
-# This is the camera configuration for the visualization, but the scale do adjust the training images.
+# This is the camera configuration; scale adjusts training resolution (e.g. 0.5 = half resolution).
+# Intrinsics are loaded automatically from camera_path (cameras.txt).
 camera:
-   scale: 1.0
-
-   model: 1 # 0: pinhole; 1: equidistant
-   width: 640
-   height: 512
-   fx: 661.21509325
-   fy: 662.56687255
-   cx: 312.6427
-   cy: 256.73286345
-
-   d0: -0.0625867993
-   d1: 0.1641814187
-   d2: 0.0059362873
-   d3: 0.0029017112
-   d4: 0.0
+   scale: 0.5
 
 map:
    map_size: 300
