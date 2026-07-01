@@ -5,7 +5,7 @@
 #include <thread>
 #endif
 
-#ifndef _WIN32
+#if defined(ENABLE_BACKWARD) && !defined(_WIN32)
 #define BACKWARD_HAS_DW 1
 #include "backward.hpp"
 namespace backward {

@@ -1,5 +1,7 @@
 #include "neural_gaussian.h"
 
+#include <fstream>
+
 #include "gsplat_cpp/fully_fused_projection.h"
 #include "gsplat_cpp/rasterize_to_pixels.h"
 #include "llog/llog.h"

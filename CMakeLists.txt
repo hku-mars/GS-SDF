@@ -12,6 +12,20 @@ set(CMAKE_CXX_FLAGS "-fPIC")
 add_definitions(-O3 -DWITH_CUDA -DTHRUST_IGNORE_CUB_VERSION_CHECK)
 
 option(ENABLE_ROS "Enable ROS support" OFF)
+option(ENABLE_BACKWARD "Enable backward-cpp stack traces on crash" OFF)
+
+if(ENABLE_BACKWARD AND NOT WIN32)
+  add_definitions(-DENABLE_BACKWARD)
+  find_library(DW_LIBRARY dw)
+  if(DW_LIBRARY)
+    message(STATUS "backward-cpp enabled, linking libdw: ${DW_LIBRARY}")
+  else()
+    message(
+      WARNING
+        "ENABLE_BACKWARD is ON but libdw not found. Install libdw-dev or set -DENABLE_BACKWARD=OFF."
+    )
+  endif()
+endif()
 
 # Define installation directories based on build type
 if(ENABLE_ROS)
@@ -143,9 +157,8 @@ add_library(neural_mapping_lib include/neural_mapping/neural_mapping.cpp)
 target_link_libraries(neural_mapping_lib data_loader optimizer neural_net
                       neural_gaussian)
 
-if(NOT WIN32)
-  target_link_libraries(neural_mapping_lib dw)
-endif()
-
 add_executable(neural_mapping_node src/neural_mapping_node.cpp)
 target_link_libraries(neural_mapping_node neural_mapping_lib)
+if(ENABLE_BACKWARD AND NOT WIN32 AND DW_LIBRARY)
+  target_link_libraries(neural_mapping_node ${DW_LIBRARY})
+endif()

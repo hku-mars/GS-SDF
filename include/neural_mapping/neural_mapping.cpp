@@ -1,5 +1,7 @@
 #include "neural_mapping.h"
 
+#include <fstream>
+
 #ifdef ENABLE_ROS
 #include <tf/transform_broadcaster.h>
 #endif

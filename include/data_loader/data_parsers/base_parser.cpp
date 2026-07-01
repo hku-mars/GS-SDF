@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <filesystem>
+#include <fstream>
 
 #include "utils/ply_utils/ply_utils_torch.h"
 #include <opencv2/opencv.hpp>

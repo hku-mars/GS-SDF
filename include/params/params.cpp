@@ -1,4 +1,5 @@
 #include "params.h"
+#include <fstream>
 #include <opencv2/opencv.hpp>
 
 #ifdef ENABLE_ROS
