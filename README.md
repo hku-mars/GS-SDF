@@ -206,10 +206,82 @@ Input `h` + `Enter` to see the help message.
       sh scripts/baseline.sh
   ```
 
-## 6. Visualization
+## 6. Headless fly-through rendering (`render` mode)
+
+Besides interactive `view` mode (keyboard `i` exports training cameras and runs
+`eval/inter_poses.py` interpolation), GS-SDF supports **headless** rendering
+along an arbitrary camera path via:
+
+```bash
+./src/GS-SDF/build/neural_mapping_node render \
+    src/GS-SDF/output/(your_output_folder) \
+    /path/to/custom_poses.txt \
+    30 \
+    /path/to/custom_camera_spec.txt
+```
+
+<details>
+<summary>Arguments, pose format, outputs &amp; rebuild</summary>
+
+Arguments:
+
+| Argument | Description |
+|----------|-------------|
+| `pretrained_path` | Training output folder (same as `view`), containing `model/gs.ply`, `model/local_map_checkpoint.pt`, etc. |
+| `pose_file` | Text file of camera poses (see format below) |
+| `fps` | Optional video frame rate (default: `30`) |
+| `camera_spec_file` | Optional per-frame intrinsics override (see format below) |
+
+**Pose file format** (`pose_type=0`): one OpenCV **camera-to-world** (`c2w`)
+4×4 matrix per frame, four floats per line (same convention as
+`color_poses.txt`):
+
+```text
+r00 r01 r02 tx
+r10 r11 r12 ty
+r20 r21 r22 tz
+0   0   0   1
+... next frame ...
+```
+
+**Camera spec format** (`render_camera_spec_v1`): comments (`#`) and blank lines
+are ignored. Each data line contains:
+
+```text
+width height fx fy cx cy
+```
+
+If the file has a single data line, it is broadcast to every pose frame.
+Otherwise the line count must match the pose frame count.
+
+When `camera_spec_file` is omitted, rendering falls back to the trained
+model's scene config intrinsics and resolution (legacy behavior). The process
+loads the checkpoint, renders, writes outputs, and **exits** (no keyboard loop).
+
+**Outputs** under the run directory:
+
+```text
+src/GS-SDF/output/(your_output_folder)/gs_log/path/
+  render_color.mp4
+  render_depth.mp4
+  color/renders/{i}.png
+  depth/renders/{i}.png
+```
+
+This mode is intended for scripted / batch fly-through (e.g. cross-method NVS
+comparison pipelines that share a neutral `trajectory.json` from an external
+tool). Rebuild after pulling if `render` is not listed in the usage message:
+
+```bash
+cd src/GS-SDF/build && cmake .. && make -j8
+```
+
+</details>
+
+## 7. Visualization
 
 - Tested on Ubuntu 20.04, cuda 11.8, ROS Noetic
-- We use RVIZ for visualization for now. Please install ROS Noetic following the [official guide](http://wiki.ros.org/noetic/Installation/Ubuntu) or refer to the [Docker](#6-docker) 'ROS Installation' section.
+- We use RVIZ for visualization for now. Please install ROS Noetic following the [official guide](http://wiki.ros.org/noetic/Installation/Ubuntu) or refer to the [Docker](#8-docker) 'ROS Installation' section.
 - Re-build the packege:
 
   ```bash
@@ -237,7 +309,7 @@ Input `h` + `Enter` to see the help message.
   roslaunch neural_mapping rviz.launch
   ```
 
-## 7. Docker
+## 8. Docker
 
 - We provide a [enroot](https://github.com/NVIDIA/enroot) docker image for testing.
   ```bash
@@ -286,7 +358,7 @@ Input `h` + `Enter` to see the help message.
   enroot export --output gs_sdf.sqsh gs_sdf
   ```
 
-## 8. Acknowledgement
+## 9. Acknowledgement
 
 Thanks for the excellent open-source projects that we rely on:
 [gsplat](https://github.com/nerfstudio-project/gsplat), [M2Mapping](https://github.com/hku-mars/M2Mapping), [nerfacc](https://github.com/nerfstudio-project/nerfacc), [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn), [kaolin-wisp](https://github.com/NVIDIAGameWorks/kaolin-wisp), [CuMCubes

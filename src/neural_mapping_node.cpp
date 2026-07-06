@@ -16,9 +16,10 @@ backward::SignalHandling sh;
 /**
  * @brief Main entry point for the neural_mapping node
  *
- * Supports two operating modes:
+ * Supports three operating modes:
  * - "view": Visualizes a pretrained model
  * - "train": Trains a new neural mapping model
+ * - "render": Headless fly-through along a custom pose file
  */
 int main(int argc, char **argv) {
   // Set random seeds for reproducibility
@@ -37,7 +38,8 @@ int main(int argc, char **argv) {
   if (argc < 2) {
     std::cerr << "Usage: neural_mapping_node <mode> [args...]\n"
               << "  Modes: view <pretrained_path> | train <config_path> "
-                 "<data_path>\n";
+                 "<data_path> | render <pretrained_path> <pose_file> [fps] "
+                 "[camera_spec_file]\n";
     return 1;
   }
 
@@ -82,6 +84,38 @@ int main(int argc, char **argv) {
 #endif
       std::cout << "Training mode initialized with config: " << config_path
                 << std::endl;
+    } else if (mode == "render") {
+      if (argc < 4 || argc > 6) {
+        std::cerr << "Usage: neural_mapping_node render <pretrained_path> "
+                     "<pose_file> [fps] [camera_spec_file]\n";
+        return 1;
+      }
+
+      auto pretrained_path = std::filesystem::path(argv[2]);
+      std::string pose_file = std::string(argv[3]);
+      int fps = 30;
+      std::string camera_spec_file;
+      if (argc >= 5) {
+        fps = std::atoi(argv[4]);
+      }
+      if (argc >= 6) {
+        camera_spec_file = std::string(argv[5]);
+      }
+      auto config_path = pretrained_path / "model/config/scene/config.yaml";
+
+#ifdef ENABLE_ROS
+      neural_mapping_ptr = std::make_shared<NeuralSLAM>(nh, 0, config_path);
+#else
+      neural_mapping_ptr = std::make_shared<NeuralSLAM>(0, config_path);
+#endif
+      std::cout << "Render mode: model=" << pretrained_path
+                << " pose_file=" << pose_file << " fps=" << fps;
+      if (!camera_spec_file.empty()) {
+        std::cout << " camera_spec=" << camera_spec_file;
+      }
+      std::cout << std::endl;
+      neural_mapping_ptr->render_path(pose_file, fps, camera_spec_file);
+      return 0;
     } else {
       std::cerr << "Invalid mode: " << mode << "\n";
       return 1;

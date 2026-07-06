@@ -114,9 +114,13 @@ public:
   std::map<std::string, torch::Tensor>
   render_image(const torch::Tensor &_pose, const float &_scale = 1.0,
                const bool &training = true);
+  std::map<std::string, torch::Tensor>
+  render_image(const torch::Tensor &_pose, const sensor::Cameras &camera,
+                 const float &_scale = 1.0, const bool &training = false);
 
   void render_path(bool eval, const int &fps = 30, const bool &save = true);
-  void render_path(std::string pose_file, const int &fps = 30);
+  void render_path(std::string pose_file, const int &fps = 30,
+                   const std::string &camera_spec_file = "");
 
   float export_test_image(bool is_eval = false, int idx = -1,
                           const std::string &prefix = "");

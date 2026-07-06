@@ -13,6 +13,7 @@
 #include "optimizer/loss_utils/loss_utils.h"
 #include "params/params.h"
 #include "utils/sensor_utils/cameras.hpp"
+#include "utils/sensor_utils/render_camera_spec.hpp"
 #include "utils/tqdm.hpp"
 
 #include "kaolin_wisp_cpp/spc_ops/spc_ops.h"
@@ -877,10 +878,17 @@ void NeuralSLAM::batch_train() {
 std::map<std::string, torch::Tensor>
 NeuralSLAM::render_image(const torch::Tensor &_pose, const float &_scale,
                          const bool &training) {
+  return render_image(_pose, data_loader_ptr->dataparser_ptr_->sensor_.camera,
+                      _scale, training);
+}
+
+std::map<std::string, torch::Tensor>
+NeuralSLAM::render_image(const torch::Tensor &_pose,
+                         const sensor::Cameras &camera, const float &_scale,
+                         const bool &training) {
   std::map<std::string, torch::Tensor> render_results;
-  render_results = neural_gs_ptr->render(
-      _pose, data_loader_ptr->dataparser_ptr_->sensor_.camera, false,
-      k_bck_color);
+  render_results =
+      neural_gs_ptr->render(_pose, camera, false, k_bck_color);
 
   return render_results;
 }
@@ -1097,14 +1105,25 @@ void NeuralSLAM::render_path(bool eval, const int &fps, const bool &save) {
   flush_save_queue();
 }
 
-void NeuralSLAM::render_path(std::string pose_file, const int &fps) {
+void NeuralSLAM::render_path(std::string pose_file, const int &fps,
+                             const std::string &camera_spec_file) {
   torch::NoGradGuard no_grad;
   std::cout << "Rendering pose_file: " << pose_file << std::endl;
+  if (!camera_spec_file.empty()) {
+    std::cout << "Using render camera spec: " << camera_spec_file << std::endl;
+  }
   auto poses = std::get<0>(
       data_loader_ptr->dataparser_ptr_->load_poses(pose_file, false, 0));
   if (poses.size(0) == 0) {
     std::cout << "poses is empty" << std::endl;
     return;
+  }
+  const auto &fallback_camera =
+      data_loader_ptr->dataparser_ptr_->sensor_.camera;
+  std::vector<sensor::Cameras> spec_cameras;
+  if (!camera_spec_file.empty()) {
+    spec_cameras = sensor::load_render_camera_spec(camera_spec_file,
+                                                   poses.size(0));
   }
   c10::cuda::CUDACachingAllocator::emptyCache();
 
@@ -1121,22 +1140,40 @@ void NeuralSLAM::render_path(std::string pose_file, const int &fps) {
   create_dir(log_path / "path", color_path, depth_path, gt_color_path,
              render_color_path, gt_depth_path, render_depth_path, acc_path);
 
-  auto width = data_loader_ptr->dataparser_ptr_->sensor_.camera.width;
-  auto height = data_loader_ptr->dataparser_ptr_->sensor_.camera.height;
-
   auto video_format = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
-  cv::VideoWriter video_color(log_path /
-                                  (image_type_name + "/render_color.mp4"),
-                              video_format, fps, cv::Size(width, height));
+  cv::VideoWriter video_color;
   cv::VideoWriter video_depth;
+  int video_width = -1;
+  int video_height = -1;
 
   auto depth_scale = 1.0 / data_loader_ptr->dataparser_ptr_->depth_scale_inv_;
   auto iter_bar = tq::trange(poses.size(0));
   iter_bar.set_prefix("Rendering");
   static auto p_timer_render = llog::CreateTimer("    render_train_image");
   for (const auto &i : iter_bar) {
+    auto frame_camera =
+        sensor::resolve_render_camera(spec_cameras, fallback_camera, i);
+    if (frame_camera.width != video_width ||
+        frame_camera.height != video_height) {
+      if (video_color.isOpened()) {
+        video_color.release();
+      }
+      if (video_depth.isOpened()) {
+        video_depth.release();
+      }
+      video_width = frame_camera.width;
+      video_height = frame_camera.height;
+      video_color =
+          cv::VideoWriter(log_path / (image_type_name + "/render_color.mp4"),
+                          video_format, fps, cv::Size(video_width, video_height));
+      if (!video_color.isOpened()) {
+        throw std::runtime_error("Failed to open render_color.mp4 writer");
+      }
+    }
+
     p_timer_render->tic();
-    auto render_results = render_image(poses[i].slice(0, 0, 3), 1.0, false);
+    auto render_results =
+        render_image(poses[i].slice(0, 0, 3), frame_camera, 1.0, false);
     p_timer_render->toc_sum();
     if (!render_results.empty()) {
       auto render_color = utils::tensor_to_cv_mat(render_results["color"]);
@@ -1148,7 +1185,8 @@ void NeuralSLAM::render_path(std::string pose_file, const int &fps) {
       if (!video_depth.isOpened()) {
         video_depth =
             cv::VideoWriter(log_path / (image_type_name + "/render_depth.mp4"),
-                            video_format, fps, cv::Size(width, height));
+                            video_format, fps,
+                            cv::Size(video_width, video_height));
       }
       video_depth.write(depth_colormap);
 
