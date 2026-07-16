@@ -257,7 +257,7 @@ int DataLoader::export_image(std::filesystem::path &colmap_sparse_path,
 
     std::ofstream *tmp_pose_file;
     std::filesystem::path *tmp_file_path;
-    if (llff && ((i + 1) % 8 == 0)) {
+    if (llff && (i % 8 == 0)) {
       tmp_pose_file = &test_colmap_color_pose_file;
       tmp_file_path = &test_colmap_color_file_path;
     } else {
