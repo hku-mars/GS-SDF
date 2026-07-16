@@ -830,7 +830,7 @@ void DataParser::load_colors(const std::string &file_extension,
     for (int i = 0; i < raw_color_num; i++) {
       auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
       if (llff) {
-        if ((i + 1) % 8 != 0) {
+        if (i % 8 != 0) {
           train_to_raw_map_ids_[i - i / 8] = i;
         }
       } else {
@@ -847,7 +847,7 @@ void DataParser::load_colors(const std::string &file_extension,
         auto color = get_color_image(i, DataType::RawColor);
         auto pose = get_pose(i, DataType::RawColor).slice(0, 0, 3);
         if (llff) {
-          if ((i + 1) % 8 != 0) {
+          if (i % 8 != 0) {
             train_color_.index_put_({i - i / 8}, color);
           }
         } else {
@@ -957,7 +957,7 @@ void DataParser::load_depths(const DepthType& depth_type,
 
         auto xyz = direction * depth + pos;
         if (llff) {
-          if ((i + 1) % 8 != 0) {
+          if (i % 8 != 0) {
             train_depth_pack_.depth.index_put_({i - i / 8}, depth);
             train_depth_pack_.direction.index_put_({i - i / 8}, direction);
             train_depth_pack_.xyz.index_put_({i - i / 8}, xyz);
